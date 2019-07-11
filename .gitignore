@@ -1,0 +1,13 @@
+# VSCode
+.idea/
+
+# migrate db data
+bin/
+.env_migrator.yaml
+
+# .env file
+.env
+
+# go module
+go.mod
+go.sum
