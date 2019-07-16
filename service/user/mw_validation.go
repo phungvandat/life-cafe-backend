@@ -5,7 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/phungvandat/life-cafe-backend/domain"
+	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
+	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 	"github.com/phungvandat/life-cafe-backend/util/constants"
 	"github.com/phungvandat/life-cafe-backend/util/regex"
 )
@@ -23,42 +24,42 @@ func ValidationMiddleware() func(Service) Service {
 	}
 }
 
-func (mw validationMiddleware) Create(ctx context.Context, u domain.User) (*domain.User, error) {
-	if u.Username == "" {
+func (mw validationMiddleware) Create(ctx context.Context, req requestModel.CreateUserRequest) (*responseModel.CreateUserResponse, error) {
+	if req.User.Username == "" {
 		return nil, MissingUsernameError
 	}
 	usernameRegex, _ := regexp.Compile(regex.UsernameRegex)
-	if !usernameRegex.MatchString(u.Username) {
+	if !usernameRegex.MatchString(req.User.Username) {
 		return nil, InvalidUsernameError
 	}
 
-	if strings.Trim(u.Fullname, " ") == "" {
+	if strings.Trim(req.User.Fullname, " ") == "" {
 		return nil, MissingFullnameError
 	}
 
-	if strings.Trim(u.Password, " ") == "" {
+	if strings.Trim(req.User.Password, " ") == "" {
 		return nil, MissingPasswordError
 	}
 
-	if strings.Trim(u.Role, " ") == "" {
+	if strings.Trim(req.User.Role, " ") == "" {
 		return nil, MissingRoleError
 	}
 
-	if _, check := constants.USER_ROLE[u.Role]; !check {
+	if _, check := constants.USER_ROLE[req.User.Role]; !check {
 		return nil, InvalidRoleError
 	}
 
-	return mw.Service.Create(ctx, u)
+	return mw.Service.Create(ctx, req)
 }
 
-func (mw validationMiddleware) LogIn(ctx context.Context, u domain.User) (*domain.User, string, error) {
-	if u.Username == "" {
-		return nil, "", MissingUsernameError
+func (mw validationMiddleware) LogIn(ctx context.Context, req requestModel.UserLogInRequest) (*responseModel.UserLogInResponse, error) {
+	if req.Username == "" {
+		return nil, MissingUsernameError
 	}
 
-	if u.Password == "" {
-		return nil, "", MissingPasswordError
+	if req.Password == "" {
+		return nil, MissingPasswordError
 	}
 
-	return mw.Service.LogIn(ctx, u)
+	return mw.Service.LogIn(ctx, req)
 }

@@ -11,6 +11,8 @@ import (
 	"github.com/phungvandat/life-cafe-backend/endpoints"
 	"github.com/phungvandat/life-cafe-backend/http/encode"
 	"github.com/phungvandat/life-cafe-backend/http/middlewares"
+	productCategoryRoute "github.com/phungvandat/life-cafe-backend/http/route/product_category"
+	uploadRoute "github.com/phungvandat/life-cafe-backend/http/route/upload"
 	userRoute "github.com/phungvandat/life-cafe-backend/http/route/user"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
@@ -46,6 +48,8 @@ func NewHTTPHandler(middlewares middlewares.Middlewares, endpoints endpoints.End
 	).ServeHTTP)
 
 	r.Route("/users", userRoute.UserRoute(endpoints, middlewares, options))
+	r.Route("/upload", uploadRoute.UploadRoute(endpoints, middlewares, options))
+	r.Route("/product-categories", productCategoryRoute.ProductCategoryRoute(endpoints, middlewares, options))
 
 	return r
 }

@@ -3,11 +3,13 @@ package user
 import (
 	"context"
 
-	"github.com/phungvandat/life-cafe-backend/domain"
+	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
+	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 )
 
 // Service interface contain functions
 type Service interface {
-	Create(ctx context.Context, u domain.User) (*domain.User, error)
-	LogIn(ctx context.Context, u domain.User) (*domain.User, string, error)
+	Create(context.Context, requestModel.CreateUserRequest) (*responseModel.CreateUserResponse, error)
+	LogIn(context.Context, requestModel.UserLogInRequest) (*responseModel.UserLogInResponse, error)
+	CreateMaster(context.Context) error
 }

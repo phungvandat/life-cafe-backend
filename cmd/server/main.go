@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,6 +17,8 @@ import (
 	"github.com/phungvandat/life-cafe-backend/http/middlewares"
 	"github.com/phungvandat/life-cafe-backend/service"
 	authSvc "github.com/phungvandat/life-cafe-backend/service/auth"
+	productCategorySvc "github.com/phungvandat/life-cafe-backend/service/product_category"
+	uploadSvc "github.com/phungvandat/life-cafe-backend/service/upload"
 	userSvc "github.com/phungvandat/life-cafe-backend/service/user"
 	"github.com/phungvandat/life-cafe-backend/util/config"
 	"github.com/phungvandat/life-cafe-backend/util/config/db/pg"
@@ -67,14 +70,25 @@ func main() {
 				authSvc.NewPGService(pgDB, logger),
 				authSvc.ValidationMiddleware(),
 			).(authSvc.Service),
+			UploadService: service.Compose(
+				uploadSvc.NewPGService(),
+				uploadSvc.ValidationMiddleware(),
+			).(uploadSvc.Service),
+			ProductCategoryService: service.Compose(
+				productCategorySvc.NewPGService(pgDB, logger),
+				productCategorySvc.ValidationMiddleware(),
+			).(productCategorySvc.Service),
 		}
 	)
 	defer closeDB()
 
+	// Create master
+	s.UserService.CreateMaster(context.Background())
+
 	var h http.Handler
 	{
 		h = serviceHttp.NewHTTPHandler(
-			middlewares.MakeHttpMiddleware(s),
+			middlewares.MakeHTTPpMiddleware(s),
 			endpoints.MakeServerEndpoints(s),
 			logger,
 			os.Getenv("ENV") == "local",

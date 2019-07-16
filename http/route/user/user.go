@@ -9,12 +9,14 @@ import (
 	"github.com/phungvandat/life-cafe-backend/http/middlewares"
 )
 
-func UserRoute(endpoints endpoints.Endpoints, middlewares middlewares.Middlewares,
+// UserRoute func
+func UserRoute(endpoints endpoints.Endpoints,
+	middlewares middlewares.Middlewares,
 	options []httptransport.ServerOption) func(r chi.Router) {
 	return func(r chi.Router) {
 		// Create user
 		r.Post("/", httptransport.NewServer(
-			middlewares.AuthMiddleware.AuthUser((endpoints.UserEndpoint.CreateUser)),
+			middlewares.AuthMiddleware.AuthAdmin((endpoints.UserEndpoint.CreateUser)),
 			userDecode.CreateRequest,
 			encode.EncodeResponse,
 			options...,
