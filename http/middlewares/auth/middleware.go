@@ -5,5 +5,6 @@ import (
 )
 
 type AuthMiddleware struct {
-	AuthUser endpoint.Middleware
+	AuthUser  endpoint.Middleware
+	AuthAdmin endpoint.Middleware
 }

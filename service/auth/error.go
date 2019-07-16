@@ -9,6 +9,7 @@ var (
 	AccountNotFoundError = accountNotFoundError{}
 	AccountIsLockedError = accountIsLockedError{}
 	NotLoggedInError     = notLoggedInError{}
+	AccessDeniedError    = accessDeniedError{}
 )
 
 // account not found error
@@ -42,4 +43,15 @@ func (notLoggedInError) Error() string {
 
 func (notLoggedInError) StatusCode() int {
 	return http.StatusUnauthorized
+}
+
+//
+type accessDeniedError struct{}
+
+func (accessDeniedError) Error() string {
+	return "Access denied"
+}
+
+func (accessDeniedError) StatusCode() int {
+	return http.StatusForbidden
 }

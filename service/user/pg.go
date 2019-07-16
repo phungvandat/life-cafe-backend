@@ -5,7 +5,9 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
-	"github.com/phungvandat/life-cafe-backend/domain"
+	domainModel "github.com/phungvandat/life-cafe-backend/model/domain"
+	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
+	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 	"github.com/phungvandat/life-cafe-backend/util/config"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
@@ -24,33 +26,42 @@ func NewPGService(db *gorm.DB, logger log.Logger) Service {
 	}
 }
 
-func (s *pgService) Create(ctx context.Context, u domain.User) (*domain.User, error) {
-	userExisted := &domain.User{Username: u.Username}
+func (s *pgService) Create(ctx context.Context, req requestModel.CreateUserRequest) (*responseModel.CreateUserResponse, error) {
+	userExisted := &domainModel.User{Username: req.User.Username}
 	err := s.db.Find(userExisted, userExisted).Error
 	if err == nil {
 		return nil, UsernameIsExistedError
 	}
 
-	err = s.db.Create(&u).Error
+	user := &domainModel.User{
+		Username: req.User.Username,
+		Fullname: req.User.Fullname,
+		Password: req.User.Password,
+		Role:     req.User.Role,
+		Active:   req.User.Active,
+	}
+	err = s.db.Create(user).Error
 	if err != nil {
 		return nil, err
 	}
-	return &u, nil
+	return &responseModel.CreateUserResponse{
+		User: user,
+	}, nil
 }
 
-func (s *pgService) LogIn(ctx context.Context, u domain.User) (*domain.User, string, error) {
-	username := u.Username
-	password := u.Password
+func (s *pgService) LogIn(ctx context.Context, req requestModel.UserLogInRequest) (*responseModel.UserLogInResponse, error) {
+	username := req.Username
+	password := req.Password
 
-	user := &domain.User{Username: username}
+	user := &domainModel.User{Username: username}
 	err := s.db.Find(user, user).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
-		return nil, "", UserNotFoundError
+		return nil, UserNotFoundError
 	}
 	checkPassword := user.ComparePassword(password)
 
 	if checkPassword == false {
-		return nil, "", WrongPasswordError
+		return nil, WrongPasswordError
 	}
 	clasms := helper.TokenClaims{
 		UserID:   user.Model.ID.String(),
@@ -61,8 +72,29 @@ func (s *pgService) LogIn(ctx context.Context, u domain.User) (*domain.User, str
 	jwt, err := helper.GenerateToken(config.GetJWTSerectKeyEnv(), clasms)
 
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	return user, jwt, err
+	return &responseModel.UserLogInResponse{
+		User:  user,
+		Token: jwt,
+	}, err
+}
+
+func (s *pgService) CreateMaster(_ context.Context) error {
+	user := &domainModel.User{
+		Username: "master",
+	}
+	err := s.db.Find(user, user).Error
+
+	if err == gorm.ErrRecordNotFound {
+		user = &domainModel.User{
+			Username: "master",
+			Password: "master",
+			Fullname: "master",
+			Role:     "admin",
+		}
+		return s.db.Create(user).Error
+	}
+	return err
 }

@@ -18,3 +18,7 @@ func ValidationMiddleware() func(Service) Service {
 func (mw validationMiddleware) AuthenticateUser(ctx context.Context) error {
 	return mw.Service.AuthenticateUser(ctx)
 }
+
+func (mw validationMiddleware) AuthenticateAdmin(ctx context.Context) error {
+	return mw.Service.AuthenticateAdmin(ctx)
+}

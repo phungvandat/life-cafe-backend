@@ -5,14 +5,17 @@ import (
 	"github.com/phungvandat/life-cafe-backend/service"
 )
 
+// Middlewares struct
 type Middlewares struct {
-	auth.AuthMiddleware
+	AuthMiddleware auth.AuthMiddleware
 }
 
-func MakeHttpMiddleware(s service.Service) Middlewares {
+// MakeHTTPpMiddleware func
+func MakeHTTPpMiddleware(s service.Service) Middlewares {
 	return Middlewares{
 		AuthMiddleware: auth.AuthMiddleware{
-			AuthUser: auth.MakeAuthUserMiddleware(s),
+			AuthUser:  auth.MakeAuthUserMiddleware(s),
+			AuthAdmin: auth.MakeAuthAdminMiddleware(s),
 		},
 	}
 }

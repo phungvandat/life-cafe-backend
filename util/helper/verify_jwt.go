@@ -21,7 +21,7 @@ func VerifyToken(ctx context.Context, req *http.Request) context.Context {
 			return []byte(secret), nil
 		})
 
-		if err != nil && !claims.Valid {
+		if err != nil || !claims.Valid {
 			goto End
 		}
 		data := claims.Claims.(jwt.MapClaims)
