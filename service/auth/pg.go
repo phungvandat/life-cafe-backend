@@ -3,24 +3,21 @@ package auth
 import (
 	"context"
 
-	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
 
-	"github.com/phungvandat/life-cafe-backend/model/domain"
+	"github.com/phungvandat/life-cafe-backend/model/pg"
 	"github.com/phungvandat/life-cafe-backend/util/contextkey"
 )
 
 // pgService implmenter for auth service in postgres
 type pgService struct {
-	db     *gorm.DB
-	logger log.Logger
+	db *gorm.DB
 }
 
 // NewPGService new pg service
-func NewPGService(db *gorm.DB, logger log.Logger) Service {
+func NewPGService(db *gorm.DB) Service {
 	return &pgService{
-		db:     db,
-		logger: logger,
+		db: db,
 	}
 }
 

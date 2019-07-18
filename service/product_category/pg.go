@@ -3,38 +3,35 @@ package productcategory
 import (
 	"context"
 
-	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
-	domainModel "github.com/phungvandat/life-cafe-backend/model/domain"
+	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 )
 
 // pgService implmenter for User serivce in postgres
 type pgService struct {
-	db     *gorm.DB
-	logger log.Logger
+	db *gorm.DB
 }
 
 // NewPGService new pg service
-func NewPGService(db *gorm.DB, logger log.Logger) Service {
+func NewPGService(db *gorm.DB) Service {
 	return &pgService{
-		db:     db,
-		logger: logger,
+		db: db,
 	}
 }
 
 func (s *pgService) Create(ctx context.Context, req requestModel.CreateProductCategoryRequest) (*responseModel.CreateProductCategoryResponse, error) {
-	productCategory := &domainModel.ProductCategory{
+	productCategory := &pgModel.ProductCategory{
 		Slug:  req.Slug,
 		Name:  req.Name,
 		Photo: req.Photo,
 	}
 	var err error
 	if req.ParentCategoryID != "" {
-		parentCategoryID, _ := domainModel.UUIDFromString(req.ParentCategoryID)
-		parentCategory := &domainModel.ProductCategory{
-			Model: domainModel.Model{
+		parentCategoryID, _ := pgModel.UUIDFromString(req.ParentCategoryID)
+		parentCategory := &pgModel.ProductCategory{
+			Model: pgModel.Model{
 				ID: parentCategoryID,
 			},
 		}
@@ -48,7 +45,7 @@ func (s *pgService) Create(ctx context.Context, req requestModel.CreateProductCa
 		productCategory.ParentCategoryID = &parentCategoryID
 	}
 
-	productCategorySlug := &domainModel.ProductCategory{
+	productCategorySlug := &pgModel.ProductCategory{
 		Slug: req.Slug,
 	}
 
@@ -70,10 +67,10 @@ func (s *pgService) Create(ctx context.Context, req requestModel.CreateProductCa
 }
 
 func (s *pgService) GetProductCategory(ctx context.Context, req requestModel.GetProductCategoryRequest) (*responseModel.GetProductCategoryResponse, error) {
-	productIDUUID, _ := domainModel.UUIDFromString(req.ParamProductCategoryID)
-	productCategory := &domainModel.ProductCategory{
-		Model: domainModel.Model{
-			ID: productIDUUID,
+	productCategoryIDUUID, _ := pgModel.UUIDFromString(req.ParamProductCategoryID)
+	productCategory := &pgModel.ProductCategory{
+		Model: pgModel.Model{
+			ID: productCategoryIDUUID,
 		},
 	}
 
@@ -93,8 +90,8 @@ func (s *pgService) GetProductCategory(ctx context.Context, req requestModel.Get
 	}
 
 	if productCategory.ParentCategoryID != nil {
-		parentCategory := &domainModel.ProductCategory{
-			Model: domainModel.Model{
+		parentCategory := &pgModel.ProductCategory{
+			Model: pgModel.Model{
 				ID: *productCategory.ParentCategoryID,
 			},
 		}
@@ -119,7 +116,7 @@ func (s *pgService) GetProductCategories(ctx context.Context, req requestModel.G
 	}
 
 	arrProductCategory := []struct {
-		*domainModel.ProductCategory
+		*pgModel.ProductCategory
 		ParentName  *string `json:"parent_name"`
 		ParentColor *string `json:"parent_color"`
 	}{}
@@ -138,8 +135,8 @@ func (s *pgService) GetProductCategories(ctx context.Context, req requestModel.G
 			ProductCategory: item.ProductCategory,
 		}
 		if item.ParentCategoryID != nil {
-			productCategory.ParentCategory = &domainModel.ProductCategory{
-				Model: domainModel.Model{
+			productCategory.ParentCategory = &pgModel.ProductCategory{
+				Model: pgModel.Model{
 					ID: *item.ParentCategoryID,
 				},
 				Name:  *item.ParentName,
@@ -155,10 +152,13 @@ func (s *pgService) GetProductCategories(ctx context.Context, req requestModel.G
 }
 
 func (s *pgService) UpdateProductCategory(ctx context.Context, req requestModel.UpdateProductCategoryRequest) (*responseModel.UpdateProductCategoryResponse, error) {
-	productCategoryID, _ := domainModel.UUIDFromString(req.ParamProductCategoryID)
+	productCategoryRes := &responseModel.UpdateProductCategoryResponse{
+		ProductCategory: &responseModel.ProductCategory{},
+	}
+	productCategoryID, _ := pgModel.UUIDFromString(req.ParamProductCategoryID)
 
-	productCategory := &domainModel.ProductCategory{
-		Model: domainModel.Model{
+	productCategory := &pgModel.ProductCategory{
+		Model: pgModel.Model{
 			ID: productCategoryID,
 		},
 	}
@@ -171,15 +171,11 @@ func (s *pgService) UpdateProductCategory(ctx context.Context, req requestModel.
 		return nil, err
 	}
 
-	productCategoryRes := &responseModel.UpdateProductCategoryResponse{
-		ProductCategory: &responseModel.ProductCategory{},
-	}
-
-	var parentCategory *domainModel.ProductCategory
+	var parentCategory *pgModel.ProductCategory
 	if req.ParentCategoryID != "" {
-		parentCategoryID, _ := domainModel.UUIDFromString(req.ParentCategoryID)
-		parentCategory = &domainModel.ProductCategory{
-			Model: domainModel.Model{
+		parentCategoryID, _ := pgModel.UUIDFromString(req.ParentCategoryID)
+		parentCategory = &pgModel.ProductCategory{
+			Model: pgModel.Model{
 				ID: parentCategoryID,
 			},
 		}
@@ -194,8 +190,8 @@ func (s *pgService) UpdateProductCategory(ctx context.Context, req requestModel.
 		}
 		productCategory.ParentCategoryID = &parentCategoryID
 	} else if productCategory.ParentCategoryID != nil {
-		parentCategory = &domainModel.ProductCategory{
-			Model: domainModel.Model{
+		parentCategory = &pgModel.ProductCategory{
+			Model: pgModel.Model{
 				ID: *productCategory.ParentCategoryID,
 			},
 		}
@@ -207,8 +203,8 @@ func (s *pgService) UpdateProductCategory(ctx context.Context, req requestModel.
 	}
 
 	if parentCategory != nil {
-		productCategoryRes.ProductCategory.ParentCategory = &domainModel.ProductCategory{
-			Model: domainModel.Model{
+		productCategoryRes.ProductCategory.ParentCategory = &pgModel.ProductCategory{
+			Model: pgModel.Model{
 				ID: parentCategory.ID,
 			},
 			Name:  parentCategory.Name,
@@ -221,7 +217,7 @@ func (s *pgService) UpdateProductCategory(ctx context.Context, req requestModel.
 	}
 
 	if req.Slug != "" {
-		productCategorySlug := &domainModel.ProductCategory{}
+		productCategorySlug := &pgModel.ProductCategory{}
 
 		err = s.db.Where("id != ? AND slug = ?", productCategory.ID, req.Slug).Find(productCategorySlug).Error
 

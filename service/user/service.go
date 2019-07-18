@@ -12,4 +12,6 @@ type Service interface {
 	Create(context.Context, requestModel.CreateUserRequest) (*responseModel.CreateUserResponse, error)
 	LogIn(context.Context, requestModel.UserLogInRequest) (*responseModel.UserLogInResponse, error)
 	CreateMaster(context.Context) error
+	RollbackTransaction(context.Context, string) error
+	CommitTransaction(context.Context, string) error
 }

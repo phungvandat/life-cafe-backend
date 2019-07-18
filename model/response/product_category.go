@@ -1,12 +1,12 @@
 package response
 
 import (
-	domainModel "github.com/phungvandat/life-cafe-backend/model/domain"
+	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 )
 
 // CreateProductCategoryResponse struct
 type CreateProductCategoryResponse struct {
-	ProductCategory *domainModel.ProductCategory `json:"product_category,omitempty"`
+	ProductCategory *pgModel.ProductCategory `json:"product_category,omitempty"`
 }
 
 // GetProductCategoryResponse struct
@@ -21,8 +21,8 @@ type GetProductCategoriesResponse struct {
 
 // ProductCategory struct
 type ProductCategory struct {
-	ParentCategory *domainModel.ProductCategory `json:"parent_category,omitempty"`
-	*domainModel.ProductCategory
+	ParentCategory *pgModel.ProductCategory `json:"parent_category,omitempty"`
+	*pgModel.ProductCategory
 }
 
 // UpdateProductCategoryResponse struct

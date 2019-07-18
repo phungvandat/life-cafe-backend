@@ -17,11 +17,13 @@ import (
 	"github.com/phungvandat/life-cafe-backend/http/middlewares"
 	"github.com/phungvandat/life-cafe-backend/service"
 	authSvc "github.com/phungvandat/life-cafe-backend/service/auth"
+	productSvc "github.com/phungvandat/life-cafe-backend/service/product"
 	productCategorySvc "github.com/phungvandat/life-cafe-backend/service/product_category"
 	uploadSvc "github.com/phungvandat/life-cafe-backend/service/upload"
 	userSvc "github.com/phungvandat/life-cafe-backend/service/user"
 	"github.com/phungvandat/life-cafe-backend/util/config"
 	"github.com/phungvandat/life-cafe-backend/util/config/db/pg"
+	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
 
 func main() {
@@ -61,23 +63,39 @@ func main() {
 	// Setup service
 	var (
 		pgDB, closeDB = pg.New(config.GetPGDataSourceEnv())
-		s             = service.Service{
-			UserService: service.Compose(
-				userSvc.NewPGService(pgDB, logger),
-				userSvc.ValidationMiddleware(),
-			).(userSvc.Service),
-			AuthService: service.Compose(
-				authSvc.NewPGService(pgDB, logger),
-				authSvc.ValidationMiddleware(),
-			).(authSvc.Service),
-			UploadService: service.Compose(
-				uploadSvc.NewPGService(),
-				uploadSvc.ValidationMiddleware(),
-			).(uploadSvc.Service),
-			ProductCategoryService: service.Compose(
-				productCategorySvc.NewPGService(pgDB, logger),
-				productCategorySvc.ValidationMiddleware(),
-			).(productCategorySvc.Service),
+		spRollback    = helper.NewSagasService()
+
+		userService = service.Compose(
+			userSvc.NewPGService(pgDB, spRollback),
+			userSvc.ValidationMiddleware(),
+		).(userSvc.Service)
+
+		authService = service.Compose(
+			authSvc.NewPGService(pgDB),
+			authSvc.ValidationMiddleware(),
+		).(authSvc.Service)
+
+		uploadService = service.Compose(
+			uploadSvc.NewPGService(),
+			uploadSvc.ValidationMiddleware(),
+		).(uploadSvc.Service)
+
+		productCategoryService = service.Compose(
+			productCategorySvc.NewPGService(pgDB),
+			productCategorySvc.ValidationMiddleware(),
+		).(productCategorySvc.Service)
+
+		productService = service.Compose(
+			productSvc.NewPGService(pgDB, productCategoryService, spRollback),
+			productSvc.ValidationMiddleware(),
+		).(productSvc.Service)
+
+		s = service.Service{
+			UserService:            userService,
+			AuthService:            authService,
+			UploadService:          uploadService,
+			ProductCategoryService: productCategoryService,
+			ProductService:         productService,
 		}
 	)
 	defer closeDB()
