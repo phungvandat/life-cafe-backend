@@ -9,11 +9,14 @@ import (
 // User struct save information of an User
 type User struct {
 	Model
-	Fullname string `json:"fullname,omitempty"`
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	Role     string `json:"role,omitempty"`
-	Active   bool   `json:"active,omitempty" sql:"default:true"`
+	Fullname    string `json:"fullname,omitempty"`
+	Username    string `json:"username,omitempty"`
+	Password    string `json:"-"`
+	Role        string `json:"role,omitempty"`
+	Active      bool   `json:"active,omitempty" sql:"default:true"`
+	PhoneNumber string `json:"phone_number,omitempty"`
+	Address     string `json:"address,omitempty"`
+	Email       string `json:"email,omitempty"`
 }
 
 // BeforeCreate prepare data before create data
@@ -32,7 +35,7 @@ func (u *User) BeforeCreate(scope *gorm.Scope) error {
 // BeforeUpdate prepare data before update date
 func (u *User) BeforeUpdate(scope *gorm.Scope) error {
 	if u.Password != "" {
-		hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.MaxCost)
+		hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}

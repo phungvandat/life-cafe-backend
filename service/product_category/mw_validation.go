@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	domainModel "github.com/phungvandat/life-cafe-backend/model/domain"
+	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 	"github.com/phungvandat/life-cafe-backend/util/regex"
@@ -30,7 +30,7 @@ func (mw validationMiddleware) Create(ctx context.Context, req requestModel.Crea
 		return nil, ProductCategoryNameIsRequiredError
 	}
 
-	if _, err := domainModel.UUIDFromString(req.ParentCategoryID); req.ParentCategoryID != "" && err != nil {
+	if _, err := pgModel.UUIDFromString(req.ParentCategoryID); req.ParentCategoryID != "" && err != nil {
 		return nil, InvalidParentProductCategoryIDTypeError
 	}
 
@@ -48,7 +48,7 @@ func (mw validationMiddleware) Create(ctx context.Context, req requestModel.Crea
 }
 
 func (mw validationMiddleware) GetProductCategory(ctx context.Context, req requestModel.GetProductCategoryRequest) (*responseModel.GetProductCategoryResponse, error) {
-	if _, err := domainModel.UUIDFromString(req.ParamProductCategoryID); req.ParamProductCategoryID != "" && err != nil {
+	if _, err := pgModel.UUIDFromString(req.ParamProductCategoryID); req.ParamProductCategoryID != "" && err != nil {
 		return nil, InvalidProductCategoryIDTypeError
 	}
 	return mw.Service.GetProductCategory(ctx, req)
@@ -66,7 +66,7 @@ func (mw validationMiddleware) GetProductCategories(ctx context.Context, req req
 }
 
 func (mw validationMiddleware) UpdateProductCategory(ctx context.Context, req requestModel.UpdateProductCategoryRequest) (*responseModel.UpdateProductCategoryResponse, error) {
-	if _, err := domainModel.UUIDFromString(req.ParamProductCategoryID); req.ParamProductCategoryID != "" && err != nil {
+	if _, err := pgModel.UUIDFromString(req.ParamProductCategoryID); req.ParamProductCategoryID != "" && err != nil {
 		return nil, InvalidProductCategoryIDTypeError
 	}
 
@@ -74,7 +74,7 @@ func (mw validationMiddleware) UpdateProductCategory(ctx context.Context, req re
 		return nil, InvalidProductCategoryNameError
 	}
 
-	if _, err := domainModel.UUIDFromString(req.ParentCategoryID); req.ParentCategoryID != "" && err != nil {
+	if _, err := pgModel.UUIDFromString(req.ParentCategoryID); req.ParentCategoryID != "" && err != nil {
 		return nil, InvalidParentProductCategoryIDTypeError
 	}
 

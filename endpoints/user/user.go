@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
 	requesetModel "github.com/phungvandat/life-cafe-backend/model/request"
 	"github.com/phungvandat/life-cafe-backend/service"
 )
@@ -13,13 +14,30 @@ func MakeCreateEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(requesetModel.CreateUserRequest)
 		res, err := s.UserService.Create(ctx, req)
+		var errTransaction error
+		var transactionID *string
+		if res != nil && res.TransactionID != nil {
+			transactionID = res.TransactionID
+		}
 		if err != nil {
+			if transactionID != nil {
+				errTransaction = s.UserService.RollbackTransaction(ctx, *transactionID)
+			}
 			return nil, err
+		}
+		if transactionID != nil {
+			errTransaction = s.UserService.CommitTransaction(ctx, *transactionID)
+			res.TransactionID = nil
+		}
+		if errTransaction != nil {
+			var log log.Logger
+			log.Log("Transaction create user failure by error ", errTransaction)
 		}
 		return res, nil
 	}
 }
 
+// MakeLogInEndpoint func
 func MakeLogInEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(requesetModel.UserLogInRequest)

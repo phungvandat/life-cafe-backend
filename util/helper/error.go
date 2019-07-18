@@ -6,8 +6,9 @@ import (
 
 //Error Declaration
 var (
-	InvalidSigningAlgorithm = invalidSigningAlgorithm{}
-	InvalidAccessToken =invalidAccessToken{}
+	InvalidSigningAlgorithm           = invalidSigningAlgorithm{}
+	InvalidAccessToken                = invalidAccessToken{}
+	TransactionRollbackeNotExistError = transactionRollbackeNotExistError{}
 )
 
 // Error signing algorithm
@@ -30,4 +31,15 @@ func (invalidAccessToken) Error() string {
 
 func (invalidAccessToken) StatusCode() int {
 	return http.StatusBadRequest
+}
+
+//
+type transactionRollbackeNotExistError struct{}
+
+func (transactionRollbackeNotExistError) Error() string {
+	return "Transaction rollback not exist"
+}
+
+func (transactionRollbackeNotExistError) StatusCode() int {
+	return http.StatusInternalServerError
 }

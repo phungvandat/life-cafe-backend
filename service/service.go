@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/phungvandat/life-cafe-backend/service/auth"
+	"github.com/phungvandat/life-cafe-backend/service/product"
 	productcategory "github.com/phungvandat/life-cafe-backend/service/product_category"
 	"github.com/phungvandat/life-cafe-backend/service/upload"
 	"github.com/phungvandat/life-cafe-backend/service/user"
@@ -13,4 +14,5 @@ type Service struct {
 	AuthService            auth.Service
 	UploadService          upload.Service
 	ProductCategoryService productcategory.Service
+	ProductService         product.Service
 }

@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -22,7 +21,6 @@ func (at *Model) BeforeCreate(scope *gorm.Scope) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("hihihi", uuid.NewV4())
 	err = scope.SetColumn("CreatedAt", time.Now())
 	if err != nil {
 		return err

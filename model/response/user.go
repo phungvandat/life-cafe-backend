@@ -1,16 +1,17 @@
 package response
 
 import (
-	domainModel "github.com/phungvandat/life-cafe-backend/model/domain"
+	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 )
 
 // CreateUserResponse struct
 type CreateUserResponse struct {
-	User *domainModel.User `json:"user,omitempty"`
+	User          *pgModel.User `json:"user,omitempty"`
+	TransactionID *string           `json:"transaction_id,omitempty"`
 }
 
 // UserLogInResponse struct
 type UserLogInResponse struct {
-	User  *domainModel.User `json:"user,omitempty"`
+	User  *pgModel.User `json:"user,omitempty"`
 	Token string            `json:"token,omitempty"`
 }

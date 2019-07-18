@@ -25,27 +25,27 @@ func ValidationMiddleware() func(Service) Service {
 }
 
 func (mw validationMiddleware) Create(ctx context.Context, req requestModel.CreateUserRequest) (*responseModel.CreateUserResponse, error) {
-	if req.User.Username == "" {
+	if req.Username == "" {
 		return nil, MissingUsernameError
 	}
 	usernameRegex, _ := regexp.Compile(regex.UsernameRegex)
-	if !usernameRegex.MatchString(req.User.Username) {
+	if !usernameRegex.MatchString(req.Username) {
 		return nil, InvalidUsernameError
 	}
 
-	if strings.Trim(req.User.Fullname, " ") == "" {
+	if strings.Trim(req.Fullname, " ") == "" {
 		return nil, MissingFullnameError
 	}
 
-	if strings.Trim(req.User.Password, " ") == "" {
+	if strings.Trim(req.Password, " ") == "" {
 		return nil, MissingPasswordError
 	}
 
-	if strings.Trim(req.User.Role, " ") == "" {
+	if strings.Trim(req.Role, " ") == "" {
 		return nil, MissingRoleError
 	}
 
-	if _, check := constants.USER_ROLE[req.User.Role]; !check {
+	if _, check := constants.USER_ROLE[req.Role]; !check {
 		return nil, InvalidRoleError
 	}
 
@@ -62,4 +62,12 @@ func (mw validationMiddleware) LogIn(ctx context.Context, req requestModel.UserL
 	}
 
 	return mw.Service.LogIn(ctx, req)
+}
+
+func (mw validationMiddleware) RollbackTransaction(ctx context.Context, transactionID string) error {
+	return mw.Service.RollbackTransaction(ctx, transactionID)
+}
+
+func (mw validationMiddleware) CommitTransaction(ctx context.Context, transactionID string) error {
+	return mw.Service.CommitTransaction(ctx, transactionID)
 }
