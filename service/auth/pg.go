@@ -5,7 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/phungvandat/life-cafe-backend/model/pg"
+	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 	"github.com/phungvandat/life-cafe-backend/util/contextkey"
 )
 
@@ -26,11 +26,11 @@ func (s *pgService) AuthenticateUser(ctx context.Context) error {
 	if !check {
 		return NotLoggedInError
 	}
-	userID, err := domain.UUIDFromString(ctxUserID)
+	userID, err := pgModel.UUIDFromString(ctxUserID)
 	if err != nil {
 		return err
 	}
-	user := &domain.User{Model: domain.Model{
+	user := &pgModel.User{Model: pgModel.Model{
 		ID: userID,
 	}}
 
@@ -51,11 +51,11 @@ func (s *pgService) AuthenticateAdmin(ctx context.Context) error {
 	if !check {
 		return NotLoggedInError
 	}
-	userID, err := domain.UUIDFromString(ctxUserID)
+	userID, err := pgModel.UUIDFromString(ctxUserID)
 	if err != nil {
 		return err
 	}
-	user := &domain.User{Model: domain.Model{
+	user := &pgModel.User{Model: pgModel.Model{
 		ID: userID,
 	}}
 

@@ -10,13 +10,13 @@ var (
 	ProductMainPhotoIsRequiredError    = productMainPhotoIsRequiredError{}
 	InvalidProductQuantityError        = invalidProductQuantityError{}
 	CategoryOfProductIsRequiredError   = categoryOfProductIsRequiredError{}
-	DuplicateProductCategoryError      = duplicateProductCategoryError{}
+	DuplicateCategoryError      = duplicateCategoryError{}
 	InvalidProductPriceError           = invalidProductPriceError{}
 	ProductSlugIsRequiredError         = productSlugIsRequiredError{}
 	InvalidProductSlugError            = invalidProductSlugError{}
 	InvalidCategoryIDError             = invalidCategoryIDError{}
 	ProductSlugExistError              = productSlugExistError{}
-	ProductCategoryNotExistError       = productCategoryNotExistError{}
+	CategoryNotExistError       = categoryNotExistError{}
 	InvalidSecondaryPhotoQuantityError = invalidSecondaryPhotoQuantityError{}
 	InvalidProductIDTypeError          = invalidProductIDTypeError{}
 	ProductNotExistError               = productNotExistError{}
@@ -70,13 +70,13 @@ func (categoryOfProductIsRequiredError) StatusCode() int {
 }
 
 //
-type duplicateProductCategoryError struct{}
+type duplicateCategoryError struct{}
 
-func (duplicateProductCategoryError) Error() string {
-	return "Duplicate product category"
+func (duplicateCategoryError) Error() string {
+	return "Duplicate category"
 }
 
-func (duplicateProductCategoryError) StatusCode() int {
+func (duplicateCategoryError) StatusCode() int {
 	return http.StatusBadRequest
 }
 
@@ -136,13 +136,13 @@ func (productSlugExistError) StatusCode() int {
 }
 
 //
-type productCategoryNotExistError struct{}
+type categoryNotExistError struct{}
 
-func (productCategoryNotExistError) Error() string {
-	return "Product category not exist"
+func (categoryNotExistError) Error() string {
+	return "Category not exist"
 }
 
-func (productCategoryNotExistError) StatusCode() int {
+func (categoryNotExistError) StatusCode() int {
 	return http.StatusBadRequest
 }
 
@@ -161,7 +161,7 @@ func (invalidSecondaryPhotoQuantityError) StatusCode() int {
 type invalidProductIDTypeError struct{}
 
 func (invalidProductIDTypeError) Error() string {
-	return "Invalid product category ID"
+	return "Invalid category ID"
 }
 
 func (invalidProductIDTypeError) StatusCode() int {

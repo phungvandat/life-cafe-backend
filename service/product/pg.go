@@ -8,23 +8,23 @@ import (
 	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
-	productCategorySvc "github.com/phungvandat/life-cafe-backend/service/product_category"
+	categorySvc "github.com/phungvandat/life-cafe-backend/service/category"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
 
 // pgService implmenter for auth service in postgres
 type pgService struct {
-	db                 *gorm.DB
-	productCategorySvc productCategorySvc.Service
-	spRollback         helper.SagasService
+	db          *gorm.DB
+	categorySvc categorySvc.Service
+	spRollback  helper.SagasService
 }
 
 // NewPGService new pg service
-func NewPGService(db *gorm.DB, productCategorySvc productCategorySvc.Service, spRollback helper.SagasService) Service {
+func NewPGService(db *gorm.DB, categorySvc categorySvc.Service, spRollback helper.SagasService) Service {
 	return &pgService{
-		db:                 db,
-		productCategorySvc: productCategorySvc,
-		spRollback:         spRollback,
+		db:          db,
+		categorySvc: categorySvc,
+		spRollback:  spRollback,
 	}
 }
 
@@ -64,11 +64,11 @@ func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreatePr
 		return res, ProductSlugExistError
 	}
 
-	// product category
-	categories := []*pgModel.ProductCategory{}
+	// category
+	categories := []*pgModel.Category{}
 	for _, categoryID := range req.CategoryIDs {
 		categoryIDUUID, _ := pgModel.UUIDFromString(categoryID)
-		category := &pgModel.ProductCategory{
+		category := &pgModel.Category{
 			Model: pgModel.Model{
 				ID: categoryIDUUID,
 			},
@@ -76,11 +76,11 @@ func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreatePr
 		err = s.db.Find(category, category).Error
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return res, ProductCategoryNotExistError
+				return res, CategoryNotExistError
 			}
 			return res, err
 		}
-		categories = append(categories, &pgModel.ProductCategory{
+		categories = append(categories, &pgModel.Category{
 			Name:  category.Name,
 			Color: category.Color,
 			Model: pgModel.Model{
@@ -111,11 +111,11 @@ func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreatePr
 
 	for _, categoryID := range req.CategoryIDs {
 		categoryIDUUID, _ := pgModel.UUIDFromString(categoryID)
-		productCategory := &pgModel.Productcategory{
-			ProductID:         &product.ID,
-			ProductCategoryID: &categoryIDUUID,
+		category := &pgModel.ProductCategory{
+			ProductID:  &product.ID,
+			CategoryID: &categoryIDUUID,
 		}
-		err = tx.Create(productCategory).Error
+		err = tx.Create(category).Error
 		if err != nil {
 			return res, err
 		}
@@ -150,8 +150,8 @@ func (s *pgService) GetProduct(ctx context.Context, req requestModel.GetProductR
 		return res, err
 	}
 
-	// Get product category
-	categories, err := s.getProductCategories(ctx, (product.ID).String())
+	// Get category
+	categories, err := s.getCategoriesForProduct(ctx, (product.ID).String())
 
 	if err != nil {
 		return res, err
@@ -201,7 +201,7 @@ func (s *pgService) GetProducts(ctx context.Context, req requestModel.GetProduct
 		wg.Add(1)
 		go func(productID string) {
 			defer wg.Done()
-			categories, err := s.getProductCategories(ctx, productID)
+			categories, err := s.getCategoriesForProduct(ctx, productID)
 			if err == nil {
 				productRes.Categories = categories
 			}
@@ -295,17 +295,17 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 	preCategoryIDs := []string{}
 
 	preCategoryIDsStruct := []struct {
-		ProductCategoryID string `json:"product_category_id,omitempty"`
+		CategoryID string `json:"category_id,omitempty"`
 	}{}
 
-	err = s.db.Model(&pgModel.Productcategory{}).Where("product_id = ?", product.ID).Select("product_category_id").Scan(&preCategoryIDsStruct).Error
+	err = s.db.Model(&pgModel.ProductCategory{}).Where("product_id = ?", product.ID).Select("category_id").Scan(&preCategoryIDsStruct).Error
 
 	if err != nil {
 		return res, err
 	}
 
 	for _, item := range preCategoryIDsStruct {
-		preCategoryIDs = append(preCategoryIDs, item.ProductCategoryID)
+		preCategoryIDs = append(preCategoryIDs, item.CategoryID)
 	}
 
 	categoryIDs := []string{}
@@ -314,11 +314,11 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 		deleteCategoryIDs := helper.DifferenceArray(sameCategoryIDs, preCategoryIDs)
 		createCategoryIDs := helper.DifferenceArray(sameCategoryIDs, req.CategoryIDs)
 		if len(deleteCategoryIDs) > 0 {
-			deleteQuery := "(product_id = '" + req.ParamProductID + "' AND product_category_id = '" + deleteCategoryIDs[0] + "')"
+			deleteQuery := "(product_id = '" + req.ParamProductID + "' AND category_id = '" + deleteCategoryIDs[0] + "')"
 			for _, deleteID := range deleteCategoryIDs[1:] {
-				deleteQuery += "OR (product_id = '" + req.ParamProductID + "' AND product_category_id = '" + deleteID + "')"
+				deleteQuery += "OR (product_id = '" + req.ParamProductID + "' AND category_id = '" + deleteID + "')"
 			}
-			err = tx.Unscoped().Where(deleteQuery).Delete(&pgModel.Productcategory{}).Error
+			err = tx.Unscoped().Where(deleteQuery).Delete(&pgModel.ProductCategory{}).Error
 			if err != nil {
 				return res, err
 			}
@@ -326,10 +326,10 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 
 		if len(createCategoryIDs) > 0 {
 			for _, createID := range createCategoryIDs {
-				productCategoryIDUUID, _ := pgModel.UUIDFromString(createID)
-				productcategory := &pgModel.Productcategory{
-					ProductID:         &product.ID,
-					ProductCategoryID: &productCategoryIDUUID,
+				categoryIDUUID, _ := pgModel.UUIDFromString(createID)
+				productcategory := &pgModel.ProductCategory{
+					ProductID:  &product.ID,
+					CategoryID: &categoryIDUUID,
 				}
 				err = tx.Create(productcategory).Error
 				if err != nil {
@@ -338,6 +338,8 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 			}
 		}
 		categoryIDs = append(sameCategoryIDs, createCategoryIDs...)
+	} else {
+		categoryIDs = preCategoryIDs
 	}
 
 	err = tx.Save(product).Error
@@ -346,7 +348,7 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 		return res, err
 	}
 
-	categories, err := s.getCategories(ctx, categoryIDs)
+	categories, err := s.getCategoriesByIDs(ctx, categoryIDs)
 
 	if err != nil {
 		return res, err
@@ -361,26 +363,26 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 	return res, nil
 }
 
-func (s *pgService) getCategories(ctx context.Context, categoryIDs []string) ([]*pgModel.ProductCategory, error) {
-	categories := []*pgModel.ProductCategory{}
+func (s *pgService) getCategoriesByIDs(ctx context.Context, categoryIDs []string) ([]*pgModel.Category, error) {
+	categories := []*pgModel.Category{}
 
 	wg := sync.WaitGroup{}
 	for _, categoryID := range categoryIDs {
 		wg.Add(1)
 		go func(categoryID string) {
 			defer wg.Done()
-			category, err := s.productCategorySvc.GetProductCategory(ctx,
-				requestModel.GetProductCategoryRequest{
-					ParamProductCategoryID: categoryID,
+			category, err := s.categorySvc.GetCategory(ctx,
+				requestModel.GetCategoryRequest{
+					ParamCategoryID: categoryID,
 				})
 
 			if err == nil {
-				categories = append(categories, &pgModel.ProductCategory{
+				categories = append(categories, &pgModel.Category{
 					Model: pgModel.Model{
-						ID: category.ProductCategory.ID,
+						ID: category.Category.ID,
 					},
-					Name:  category.ProductCategory.Name,
-					Color: category.ProductCategory.Color,
+					Name:  category.Category.Name,
+					Color: category.Category.Color,
 				})
 			}
 		}(categoryID)
@@ -390,9 +392,9 @@ func (s *pgService) getCategories(ctx context.Context, categoryIDs []string) ([]
 	return categories, nil
 }
 
-func (s *pgService) getProductCategories(ctx context.Context, productID string) ([]*pgModel.ProductCategory, error) {
-	categories := []*pgModel.ProductCategory{}
-	productCategories := []pgModel.Productcategory{}
+func (s *pgService) getCategoriesForProduct(ctx context.Context, productID string) ([]*pgModel.Category, error) {
+	categories := []*pgModel.Category{}
+	productCategories := []pgModel.ProductCategory{}
 
 	err := s.db.Where("product_id = ?", productID).Find(&productCategories).Error
 	if err != nil {
@@ -404,32 +406,32 @@ func (s *pgService) getProductCategories(ctx context.Context, productID string) 
 		wg.Add(1)
 		go func(categoryID string) {
 			defer wg.Done()
-			category, err := s.productCategorySvc.GetProductCategory(ctx,
-				requestModel.GetProductCategoryRequest{
-					ParamProductCategoryID: categoryID,
+			category, err := s.categorySvc.GetCategory(ctx,
+				requestModel.GetCategoryRequest{
+					ParamCategoryID: categoryID,
 				})
 
 			if err == nil {
-				categories = append(categories, &pgModel.ProductCategory{
+				categories = append(categories, &pgModel.Category{
 					Model: pgModel.Model{
-						ID: category.ProductCategory.ID,
+						ID: category.Category.ID,
 					},
-					Name:  category.ProductCategory.Name,
-					Color: category.ProductCategory.Color,
+					Name:  category.Category.Name,
+					Color: category.Category.Color,
 				})
 			}
-		}((pc.ProductCategoryID).String())
+		}((pc.CategoryID).String())
 	}
 	wg.Wait()
 
 	return categories, nil
 }
 
-func (s *pgService) getProductcategogyStringIDArray(ctx context.Context, productCategories []pgModel.Productcategory) []string {
+func (s *pgService) getProductcategogyStringIDArray(ctx context.Context, productCategories []pgModel.ProductCategory) []string {
 	stringIDArray := []string{}
 
 	for _, pc := range productCategories {
-		stringIDArray = append(stringIDArray, (pc.ProductCategoryID).String())
+		stringIDArray = append(stringIDArray, (pc.CategoryID).String())
 	}
 	return stringIDArray
 }

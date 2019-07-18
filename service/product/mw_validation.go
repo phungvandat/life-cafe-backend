@@ -54,7 +54,7 @@ func (mw validationMiddleware) CreateProduct(ctx context.Context, req requestMod
 	uniqueCategoryIDs := helper.UniqueStringArray(req.CategoryIDs)
 
 	if len(req.CategoryIDs) != len(uniqueCategoryIDs) {
-		return nil, DuplicateProductCategoryError
+		return nil, DuplicateCategoryError
 	}
 
 	for _, categoryID := range req.CategoryIDs {
@@ -113,7 +113,7 @@ func (mw validationMiddleware) UpdateProduct(ctx context.Context, req requestMod
 		uniqueCategoryIDs := helper.UniqueStringArray(req.CategoryIDs)
 
 		if len(uniqueCategoryIDs) != len(req.CategoryIDs) {
-			return nil, DuplicateProductCategoryError
+			return nil, DuplicateCategoryError
 		}
 
 		for _, categoryID := range req.CategoryIDs {

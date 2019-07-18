@@ -12,7 +12,7 @@ import (
 	"github.com/phungvandat/life-cafe-backend/http/encode"
 	"github.com/phungvandat/life-cafe-backend/http/middlewares"
 	productRoute "github.com/phungvandat/life-cafe-backend/http/route/product"
-	productCategoryRoute "github.com/phungvandat/life-cafe-backend/http/route/product_category"
+	categoryRoute "github.com/phungvandat/life-cafe-backend/http/route/category"
 	uploadRoute "github.com/phungvandat/life-cafe-backend/http/route/upload"
 	userRoute "github.com/phungvandat/life-cafe-backend/http/route/user"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
@@ -50,7 +50,7 @@ func NewHTTPHandler(middlewares middlewares.Middlewares, endpoints endpoints.End
 
 	r.Route("/users", userRoute.UserRoute(endpoints, middlewares, options))
 	r.Route("/upload", uploadRoute.UploadRoute(endpoints, middlewares, options))
-	r.Route("/product-categories", productCategoryRoute.ProductCategoryRoute(endpoints, middlewares, options))
+	r.Route("/categories", categoryRoute.CategoryRoute(endpoints, middlewares, options))
 	r.Route("/products", productRoute.ProductRoute(endpoints, middlewares, options))
 
 	return r
