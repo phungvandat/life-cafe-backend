@@ -12,24 +12,24 @@ import (
 
 // CreateRequest func
 func CreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req requestModel.CreateProductCategoryRequest
+	var req requestModel.CreateCategoryRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
 
-//GetProductCategoryRequest func
-func GetProductCategoryRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req requestModel.GetProductCategoryRequest
+//GetCategoryRequest func
+func GetCategoryRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req requestModel.GetCategoryRequest
 
-	productCategoryID := chi.URLParam(r, "product_category_id")
-	req.ParamProductCategoryID = productCategoryID
+	categoryID := chi.URLParam(r, "category_id")
+	req.ParamCategoryID = categoryID
 
 	return req, nil
 }
 
-// GetProductCategoriesRequest func
-func GetProductCategoriesRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req requestModel.GetProductCategoriesRequest
+// GetCategoriesRequest func
+func GetCategoriesRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req requestModel.GetCategoriesRequest
 	skip := r.URL.Query().Get("skip")
 	limit := r.URL.Query().Get("limit")
 
@@ -38,15 +38,15 @@ func GetProductCategoriesRequest(_ context.Context, r *http.Request) (interface{
 	return req, nil
 }
 
-// UpdateProductCategoryRequest func
-func UpdateProductCategoryRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req requestModel.UpdateProductCategoryRequest
-	productCategoryID := chi.URLParam(r, "product_category_id")
+// UpdateCategoryRequest func
+func UpdateCategoryRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req requestModel.UpdateCategoryRequest
+	categoryID := chi.URLParam(r, "category_id")
 	err := json.NewDecoder(r.Body).Decode(&req)
 
 	if err != nil {
 		return nil, err
 	}
-	req.ParamProductCategoryID = productCategoryID
+	req.ParamCategoryID = categoryID
 	return req, nil
 }

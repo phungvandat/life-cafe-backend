@@ -1,4 +1,4 @@
-package domain
+package pg
 
 import (
 	"strings"
@@ -41,15 +41,15 @@ func (u *Product) BeforeSave(scope *gorm.Scope) error {
 	return nil
 }
 
-// Productcategory struct
-type Productcategory struct {
+// ProductCategory struct
+type ProductCategory struct {
 	Model
-	ProductID         *UUID `json:"product_id,omitempty"`
-	ProductCategoryID *UUID `json:"product_category_id,omitempty"`
+	ProductID  *UUID `json:"product_id,omitempty"`
+	CategoryID *UUID `json:"category_id,omitempty"`
 }
 
 // BeforeCreate prepare data before create data
-func (u *Productcategory) BeforeCreate(scope *gorm.Scope) error {
+func (u *ProductCategory) BeforeCreate(scope *gorm.Scope) error {
 	scope.SetColumn("ID", uuid.NewV4())
 	return nil
 }

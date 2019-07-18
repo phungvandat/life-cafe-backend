@@ -1,4 +1,4 @@
-package domain
+package pg
 
 import (
 	"strings"
@@ -8,8 +8,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// ProductCategory struct save information of an product category
-type ProductCategory struct {
+// Category struct save information of an category
+type Category struct {
 	Model
 	Name             string `json:"name,omitempty"`
 	Photo            string `json:"photo,omitempty"`
@@ -19,7 +19,7 @@ type ProductCategory struct {
 }
 
 // BeforeCreate prepare data before create data
-func (u *ProductCategory) BeforeCreate(scope *gorm.Scope) error {
+func (u *Category) BeforeCreate(scope *gorm.Scope) error {
 	scope.SetColumn("ID", uuid.NewV4())
 	scope.SetColumn("Color", helper.GetRandomColorInHex())
 	scope.SetColumn("Slug", strings.ToLower(u.Slug))
@@ -27,7 +27,7 @@ func (u *ProductCategory) BeforeCreate(scope *gorm.Scope) error {
 }
 
 // BeforeSave prepare data before save data
-func (u *ProductCategory) BeforeSave(scope *gorm.Scope) error {
+func (u *Category) BeforeSave(scope *gorm.Scope) error {
 	if u.Slug != "" {
 		scope.SetColumn("Slug", strings.ToLower(u.Slug))
 	}

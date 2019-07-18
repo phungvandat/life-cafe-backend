@@ -4,7 +4,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/phungvandat/life-cafe-backend/endpoints/index"
 	"github.com/phungvandat/life-cafe-backend/endpoints/product"
-	productcategory "github.com/phungvandat/life-cafe-backend/endpoints/product_category"
+	"github.com/phungvandat/life-cafe-backend/endpoints/category"
 	"github.com/phungvandat/life-cafe-backend/endpoints/upload"
 	"github.com/phungvandat/life-cafe-backend/endpoints/user"
 	"github.com/phungvandat/life-cafe-backend/service"
@@ -12,11 +12,11 @@ import (
 
 // Endpoints struct
 type Endpoints struct {
-	Index                   endpoint.Endpoint
-	UserEndpoint            user.UserEndpoint
-	UploadEndpoint          upload.UploadEndpoint
-	ProductCategoryEndpoint productcategory.ProductCategoryEndpoint
-	ProductEndpoint         product.ProductEndpoint
+	Index            endpoint.Endpoint
+	UserEndpoint     user.UserEndpoint
+	UploadEndpoint   upload.UploadEndpoint
+	CategoryEndpoint category.CategoryEndpoint
+	ProductEndpoint  product.ProductEndpoint
 }
 
 // MakeServerEndpoints func
@@ -30,11 +30,11 @@ func MakeServerEndpoints(s service.Service) Endpoints {
 		UploadEndpoint: upload.UploadEndpoint{
 			UploadImages: upload.MakeUploadImages(s),
 		},
-		ProductCategoryEndpoint: productcategory.ProductCategoryEndpoint{
-			CreateProductCategory: productcategory.MakeCreateEndpoint(s),
-			GetProductCategory:    productcategory.MakeGetProductCategoryEndpoint(s),
-			GetProductCategories:  productcategory.MakeGetProductCategoriesEndpoint(s),
-			UpdateProductCategory: productcategory.MakeUpdateProductCategoryEndpoint(s),
+		CategoryEndpoint: category.CategoryEndpoint{
+			CreateCategory: category.MakeCreateEndpoint(s),
+			GetCategory:    category.MakeGetCategoryEndpoint(s),
+			GetCategories:  category.MakeGetCategoriesEndpoint(s),
+			UpdateCategory: category.MakeUpdateCategoryEndpoint(s),
 		},
 		ProductEndpoint: product.ProductEndpoint{
 			CreateProductEndpoint: product.MakeCreateProductEndpoint(s),

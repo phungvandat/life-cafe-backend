@@ -18,7 +18,7 @@ import (
 	"github.com/phungvandat/life-cafe-backend/service"
 	authSvc "github.com/phungvandat/life-cafe-backend/service/auth"
 	productSvc "github.com/phungvandat/life-cafe-backend/service/product"
-	productCategorySvc "github.com/phungvandat/life-cafe-backend/service/product_category"
+	categorySvc "github.com/phungvandat/life-cafe-backend/service/category"
 	uploadSvc "github.com/phungvandat/life-cafe-backend/service/upload"
 	userSvc "github.com/phungvandat/life-cafe-backend/service/user"
 	"github.com/phungvandat/life-cafe-backend/util/config"
@@ -80,13 +80,13 @@ func main() {
 			uploadSvc.ValidationMiddleware(),
 		).(uploadSvc.Service)
 
-		productCategoryService = service.Compose(
-			productCategorySvc.NewPGService(pgDB),
-			productCategorySvc.ValidationMiddleware(),
-		).(productCategorySvc.Service)
+		categoryService = service.Compose(
+			categorySvc.NewPGService(pgDB),
+			categorySvc.ValidationMiddleware(),
+		).(categorySvc.Service)
 
 		productService = service.Compose(
-			productSvc.NewPGService(pgDB, productCategoryService, spRollback),
+			productSvc.NewPGService(pgDB, categoryService, spRollback),
 			productSvc.ValidationMiddleware(),
 		).(productSvc.Service)
 
@@ -94,7 +94,7 @@ func main() {
 			UserService:            userService,
 			AuthService:            authService,
 			UploadService:          uploadService,
-			ProductCategoryService: productCategoryService,
+			CategoryService: categoryService,
 			ProductService:         productService,
 		}
 	)
