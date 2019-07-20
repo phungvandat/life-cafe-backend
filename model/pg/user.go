@@ -21,13 +21,22 @@ type User struct {
 
 // BeforeCreate prepare data before create data
 func (u *User) BeforeCreate(scope *gorm.Scope) error {
+	var (
+		hash []byte
+		err  error
+	)
+
 	if u.Password != "" {
-		hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-		scope.SetColumn("Password", string(hash))
+		hash, err = bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	} else {
+		hash, err = bcrypt.GenerateFromPassword([]byte((uuid.NewV4()).String()), bcrypt.DefaultCost)
 	}
+
+	if err != nil {
+		return err
+	}
+
+	scope.SetColumn("Password", string(hash))
 	scope.SetColumn("ID", uuid.NewV4())
 	return nil
 }

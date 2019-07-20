@@ -17,3 +17,8 @@ type UserLogInRequest struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 }
+
+// GetUserRequest struct
+type GetUserRequest struct {
+	ParamUserID string `json:"user_id,omitempty"`
+}

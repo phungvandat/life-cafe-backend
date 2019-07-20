@@ -17,8 +17,9 @@ import (
 	"github.com/phungvandat/life-cafe-backend/http/middlewares"
 	"github.com/phungvandat/life-cafe-backend/service"
 	authSvc "github.com/phungvandat/life-cafe-backend/service/auth"
-	productSvc "github.com/phungvandat/life-cafe-backend/service/product"
 	categorySvc "github.com/phungvandat/life-cafe-backend/service/category"
+	orderSvc "github.com/phungvandat/life-cafe-backend/service/order"
+	productSvc "github.com/phungvandat/life-cafe-backend/service/product"
 	uploadSvc "github.com/phungvandat/life-cafe-backend/service/upload"
 	userSvc "github.com/phungvandat/life-cafe-backend/service/user"
 	"github.com/phungvandat/life-cafe-backend/util/config"
@@ -90,12 +91,18 @@ func main() {
 			productSvc.ValidationMiddleware(),
 		).(productSvc.Service)
 
+		orderService = service.Compose(
+			orderSvc.NewPGService(pgDB, userService, productService, spRollback),
+			orderSvc.ValidationMiddleware(),
+		).(orderSvc.Service)
+
 		s = service.Service{
-			UserService:            userService,
-			AuthService:            authService,
-			UploadService:          uploadService,
+			UserService:     userService,
+			AuthService:     authService,
+			UploadService:   uploadService,
 			CategoryService: categoryService,
-			ProductService:         productService,
+			ProductService:  productService,
+			OrderService:    orderService,
 		}
 	)
 	defer closeDB()

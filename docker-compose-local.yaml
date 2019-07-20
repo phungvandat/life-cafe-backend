@@ -15,3 +15,12 @@ services:
         ports:
             - 8080:8080
         container_name: datpv-adminer
+    
+    #     pgAdmin:
+    #     image: dpage/pgadmin4
+    #     ports:
+    #         - 8080:80
+    #     environment:
+    #         PGADMIN_DEFAULT_EMAIL: phungvandat97@gmail.com
+    #         PGADMIN_DEFAULT_PASSWORD: phungvandatpv
+    #     container_name: datpv-pgAdmin

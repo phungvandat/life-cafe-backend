@@ -7,6 +7,7 @@ import (
 	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
+	errors "github.com/phungvandat/life-cafe-backend/util/error"
 )
 
 // pgService implmenter for User serivce in postgres
@@ -38,7 +39,7 @@ func (s *pgService) Create(ctx context.Context, req requestModel.CreateCategoryR
 		err = s.db.Find(parentCategory, parentCategory).Error
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return nil, ParentCategoryIsNotExistError
+				return nil, errors.ParentCategoryIsNotExistError
 			}
 			return nil, err
 		}
@@ -52,7 +53,7 @@ func (s *pgService) Create(ctx context.Context, req requestModel.CreateCategoryR
 	err = s.db.Find(categorySlug, categorySlug).Error
 
 	if err == nil {
-		return nil, CategorySlugAlreadyExistError
+		return nil, errors.CategorySlugAlreadyExistError
 	}
 
 	err = s.db.Create(category).Error
@@ -78,7 +79,7 @@ func (s *pgService) GetCategory(ctx context.Context, req requestModel.GetCategor
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			err = CategoryNotExistError
+			err = errors.CategoryNotExistError
 		}
 		return nil, err
 	}
@@ -172,7 +173,7 @@ func (s *pgService) UpdateCategory(ctx context.Context, req requestModel.UpdateC
 	err := s.db.Find(category, category).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			err = CategoryNotExistError
+			err = errors.CategoryNotExistError
 		}
 		return nil, err
 	}
@@ -190,7 +191,7 @@ func (s *pgService) UpdateCategory(ctx context.Context, req requestModel.UpdateC
 
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				err = ParentCategoryIsNotExistError
+				err = errors.ParentCategoryIsNotExistError
 			}
 			return nil, err
 		}
@@ -228,7 +229,7 @@ func (s *pgService) UpdateCategory(ctx context.Context, req requestModel.UpdateC
 		err = s.db.Where("id != ? AND slug = ?", category.ID, req.Slug).Find(categorySlug).Error
 
 		if err == nil {
-			return nil, CategorySlugAlreadyExistError
+			return nil, errors.CategorySlugAlreadyExistError
 		}
 		category.Slug = req.Slug
 	}

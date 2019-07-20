@@ -71,6 +71,7 @@ func MakeGetProductsEndpoint(s service.Service) endpoint.Endpoint {
 func MakeUpdateProductEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(requesetModel.UpdateProductRequest)
+		req.Quantity = nil
 
 		res, err := s.ProductService.UpdateProduct(ctx, req)
 

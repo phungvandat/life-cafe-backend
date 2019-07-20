@@ -7,11 +7,16 @@ import (
 // CreateUserResponse struct
 type CreateUserResponse struct {
 	User          *pgModel.User `json:"user,omitempty"`
-	TransactionID *string           `json:"transaction_id,omitempty"`
+	TransactionID *string       `json:"transaction_id,omitempty"`
 }
 
 // UserLogInResponse struct
 type UserLogInResponse struct {
 	User  *pgModel.User `json:"user,omitempty"`
-	Token string            `json:"token,omitempty"`
+	Token string        `json:"token,omitempty"`
+}
+
+// GetUserResponse struct
+type GetUserResponse struct {
+	User *pgModel.User `json:"user,omitempty"`
 }

@@ -1,6 +1,6 @@
 package auth
 
-import "context"
+import ("context")
 
 type validationMiddleware struct {
 	Service

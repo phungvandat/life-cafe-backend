@@ -9,6 +9,7 @@ import (
 	"time"
 
 	serviceModel "github.com/phungvandat/life-cafe-backend/model/service"
+	errors "github.com/phungvandat/life-cafe-backend/util/error"
 )
 
 // pgService implmenter for User serivce in postgres
@@ -34,13 +35,13 @@ func (s *pgService) UploadImages(ctx context.Context, inputFiles []serviceModel.
 		defer out.Close()
 
 		if err != nil {
-			return []string{}, CreateFileError
+			return []string{}, errors.CreateFileError
 		}
 
 		_, err = io.Copy(out, *image.File)
 
 		if err != nil {
-			return []string{}, CopyFileError
+			return []string{}, errors.CopyFileError
 		}
 
 		arrImageName = append(arrImageName, fileName)

@@ -6,7 +6,7 @@ CREATE TABLE "public"."product_orders"(
 	"updated_at" timestamptz,
   	"deleted_at" timestamptz,
 	"product_id" uuid references products,
-	"order_id" uuid references product_orders,
+	"order_id" uuid references orders,
 	"order_quantity" int,
 	"real_price" int default 0,
  	CONSTRAINT "product_orders_pkey" PRIMARY KEY ("id"),

@@ -1,49 +1,53 @@
-package product
+package order
 
 import (
 	"github.com/go-chi/chi"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/phungvandat/life-cafe-backend/endpoints"
-	decode "github.com/phungvandat/life-cafe-backend/http/decode/json/product"
+	decode "github.com/phungvandat/life-cafe-backend/http/decode/json/order"
 	"github.com/phungvandat/life-cafe-backend/http/encode"
 	"github.com/phungvandat/life-cafe-backend/http/middlewares"
 )
 
-// ProductRoute func
-func ProductRoute(endpoints endpoints.Endpoints,
+// OrderRoute func
+func OrderRoute(endpoints endpoints.Endpoints,
 	middlewares middlewares.Middlewares,
 	options []httptransport.ServerOption,
 ) func(r chi.Router) {
 	return func(r chi.Router) {
-		// Create product
+		// Create order
 		r.Post("/", httptransport.NewServer(
 			middlewares.AuthMiddleware.AuthAdmin(
-				endpoints.ProductEndpoint.CreateProductEndpoint,
+				endpoints.OrderEndpoint.CreateOrderEndpoint,
 			),
-			decode.CreateProductRequest,
+			decode.CreateOrderRequest,
 			encode.EncodeResponse,
 			options...,
 		).ServeHTTP)
-		// Get product
-		r.Get("/{product_id}", httptransport.NewServer(
-			endpoints.ProductEndpoint.GetProductEndpoint,
-			decode.GetProductRequest,
+		// Get order
+		r.Get("/{order_id}", httptransport.NewServer(
+			middlewares.AuthMiddleware.AuthUser(
+				endpoints.OrderEndpoint.GetOrderEndpoint,
+			),
+			decode.GetOrderRequest,
 			encode.EncodeResponse,
 			options...,
 		).ServeHTTP)
-		// Get products
+		// Get orders
 		r.Get("/", httptransport.NewServer(
-			endpoints.ProductEndpoint.GetProductsEndpoint,
-			decode.GetProductsRequest,
+			middlewares.AuthMiddleware.AuthAdmin(
+				endpoints.OrderEndpoint.GetOrdersEndpoint,
+			),
+			decode.GetOrdersRequest,
 			encode.EncodeResponse,
 			options...,
 		).ServeHTTP)
-		// Update product
-		r.Put("/{product_id}", httptransport.NewServer(
+		// Update order
+		r.Put("/{order_id}", httptransport.NewServer(
 			middlewares.AuthMiddleware.AuthAdmin(
-				endpoints.ProductEndpoint.UpdateProductEndpoint,
+				endpoints.OrderEndpoint.UpdateOrderEndpoint,
 			),
-			decode.UpdateProductRequest,
+			decode.UpdateOrderRequest,
 			encode.EncodeResponse,
 			options...,
 		).ServeHTTP)

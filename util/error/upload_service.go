@@ -1,4 +1,4 @@
-package upload
+package error
 
 import (
 	"net/http"

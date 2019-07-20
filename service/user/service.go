@@ -9,9 +9,10 @@ import (
 
 // Service interface contain functions
 type Service interface {
+	RollbackTransaction(context.Context, string) error
+	CommitTransaction(context.Context, string) error
 	Create(context.Context, requestModel.CreateUserRequest) (*responseModel.CreateUserResponse, error)
 	LogIn(context.Context, requestModel.UserLogInRequest) (*responseModel.UserLogInResponse, error)
 	CreateMaster(context.Context) error
-	RollbackTransaction(context.Context, string) error
-	CommitTransaction(context.Context, string) error
+	GetUser(context.Context, requestModel.GetUserRequest) (*responseModel.GetUserResponse, error)
 }
