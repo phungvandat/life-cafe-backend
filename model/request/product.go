@@ -37,4 +37,5 @@ type UpdateProductRequest struct {
 	Barcode        string   `json:"barcode,omitempty"`
 	CategoryIDs    []string `json:"category_ids,omitempty"`
 	Description    string   `json:"description,omitempty"`
+	Quantity       *int     `json:"quantity,omitempty"`
 }

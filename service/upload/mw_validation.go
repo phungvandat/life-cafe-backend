@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	serviceModel "github.com/phungvandat/life-cafe-backend/model/service"
+	errors "github.com/phungvandat/life-cafe-backend/util/error"
 )
 
 type validationMiddleware struct {
@@ -32,7 +33,7 @@ func (mw validationMiddleware) UploadImages(ctx context.Context, inputFiles []se
 		(*image.File).Seek(0, 0)
 		contentType := strings.Split(http.DetectContentType(buffer), "/")
 		if contentType[0] != "image" {
-			return []string{}, FileAreNotImageTypes
+			return []string{}, errors.FileAreNotImageTypes
 		}
 	}
 	return mw.Service.UploadImages(ctx, inputFiles)

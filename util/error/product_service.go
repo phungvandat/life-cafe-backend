@@ -1,4 +1,4 @@
-package product
+package error
 
 import (
 	"net/http"
@@ -10,19 +10,17 @@ var (
 	ProductMainPhotoIsRequiredError    = productMainPhotoIsRequiredError{}
 	InvalidProductQuantityError        = invalidProductQuantityError{}
 	CategoryOfProductIsRequiredError   = categoryOfProductIsRequiredError{}
-	DuplicateCategoryError      = duplicateCategoryError{}
+	DuplicateCategoryError             = duplicateCategoryError{}
 	InvalidProductPriceError           = invalidProductPriceError{}
 	ProductSlugIsRequiredError         = productSlugIsRequiredError{}
 	InvalidProductSlugError            = invalidProductSlugError{}
 	InvalidCategoryIDError             = invalidCategoryIDError{}
 	ProductSlugExistError              = productSlugExistError{}
-	CategoryNotExistError       = categoryNotExistError{}
 	InvalidSecondaryPhotoQuantityError = invalidSecondaryPhotoQuantityError{}
 	InvalidProductIDTypeError          = invalidProductIDTypeError{}
 	ProductNotExistError               = productNotExistError{}
-	InvalidSkipError                   = invalidSkipError{}
-	InvalidLimitError                  = invalidLimitError{}
 	InvalidProductNameError            = invalidProductNameError{}
+	ProductIDIsRequiredError           = productIDIsRequiredError{}
 )
 
 //
@@ -136,17 +134,6 @@ func (productSlugExistError) StatusCode() int {
 }
 
 //
-type categoryNotExistError struct{}
-
-func (categoryNotExistError) Error() string {
-	return "Category not exist"
-}
-
-func (categoryNotExistError) StatusCode() int {
-	return http.StatusBadRequest
-}
-
-//
 type invalidSecondaryPhotoQuantityError struct{}
 
 func (invalidSecondaryPhotoQuantityError) Error() string {
@@ -161,7 +148,7 @@ func (invalidSecondaryPhotoQuantityError) StatusCode() int {
 type invalidProductIDTypeError struct{}
 
 func (invalidProductIDTypeError) Error() string {
-	return "Invalid category ID"
+	return "Invalid product ID"
 }
 
 func (invalidProductIDTypeError) StatusCode() int {
@@ -180,28 +167,6 @@ func (productNotExistError) StatusCode() int {
 }
 
 //
-type invalidSkipError struct{}
-
-func (invalidSkipError) Error() string {
-	return "Invalid skip"
-}
-
-func (invalidSkipError) StatusCode() int {
-	return http.StatusBadRequest
-}
-
-//
-type invalidLimitError struct{}
-
-func (invalidLimitError) Error() string {
-	return "Invalid limit"
-}
-
-func (invalidLimitError) StatusCode() int {
-	return http.StatusBadRequest
-}
-
-//
 type invalidProductNameError struct{}
 
 func (invalidProductNameError) Error() string {
@@ -209,5 +174,16 @@ func (invalidProductNameError) Error() string {
 }
 
 func (invalidProductNameError) StatusCode() int {
+	return http.StatusBadRequest
+}
+
+//
+type productIDIsRequiredError struct{}
+
+func (productIDIsRequiredError) Error() string {
+	return "Product ID is required"
+}
+
+func (productIDIsRequiredError) StatusCode() int {
 	return http.StatusBadRequest
 }

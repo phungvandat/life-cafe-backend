@@ -9,6 +9,7 @@ import (
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 	categorySvc "github.com/phungvandat/life-cafe-backend/service/category"
+	errors "github.com/phungvandat/life-cafe-backend/util/error"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
 
@@ -61,7 +62,7 @@ func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreatePr
 	err := s.db.Find(slugProduct, slugProduct).Error
 
 	if err == nil {
-		return res, ProductSlugExistError
+		return res, errors.ProductSlugExistError
 	}
 
 	// category
@@ -76,7 +77,7 @@ func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreatePr
 		err = s.db.Find(category, category).Error
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return res, CategoryNotExistError
+				return res, errors.CategoryNotExistError
 			}
 			return res, err
 		}
@@ -121,9 +122,7 @@ func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreatePr
 		}
 	}
 
-	res.Product.Product = product
-
-	s.removeProductSubPhotos(ctx, product)
+	res.Product.Product = s.removeProductSubPhotos(ctx, *product)
 
 	return res, nil
 }
@@ -145,7 +144,7 @@ func (s *pgService) GetProduct(ctx context.Context, req requestModel.GetProductR
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			err = ProductNotExistError
+			err = errors.ProductNotExistError
 		}
 		return res, err
 	}
@@ -160,10 +159,9 @@ func (s *pgService) GetProduct(ctx context.Context, req requestModel.GetProductR
 	res.Product.Categories = categories
 
 	// Sub photos
-	subPhotos := s.getProductSubPhotos(ctx, product)
-	s.removeProductSubPhotos(ctx, product)
+	subPhotos := s.getProductSubPhotos(ctx, *product)
 	res.Product.SubPhotos = subPhotos
-	res.Product.Product = product
+	res.Product.Product = s.removeProductSubPhotos(ctx, *product)
 
 	return res, nil
 }
@@ -193,10 +191,9 @@ func (s *pgService) GetProducts(ctx context.Context, req requestModel.GetProduct
 	wg := sync.WaitGroup{}
 	for _, product := range products {
 		productRes := &responseModel.Product{}
-		subPhotos := s.getProductSubPhotos(ctx, &product)
-		s.removeProductSubPhotos(ctx, &product)
+		subPhotos := s.getProductSubPhotos(ctx, product)
 		productRes.SubPhotos = subPhotos
-		productRes.Product = &product
+		productRes.Product = s.removeProductSubPhotos(ctx, product)
 
 		wg.Add(1)
 		go func(productID string) {
@@ -236,7 +233,7 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			err = ProductNotExistError
+			err = errors.ProductNotExistError
 		}
 		return res, err
 	}
@@ -251,7 +248,6 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 
 	// product sub photos
 	if len(req.SubPhotos) > 0 {
-		s.removeProductSubPhotos(ctx, product)
 		for index, subPhoto := range req.SubPhotos {
 			if index == 0 {
 				product.FirstSubPhoto = subPhoto
@@ -279,7 +275,7 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 		err := s.db.Find(slugProduct, slugProduct).Error
 
 		if err == nil {
-			return res, ProductSlugExistError
+			return res, errors.ProductSlugExistError
 		}
 		product.Slug = req.Slug
 	}
@@ -290,6 +286,10 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 
 	if req.Description != "" && req.Description != product.Description {
 		product.Description = req.Description
+	}
+
+	if req.Quantity != nil && *req.Quantity != product.Quantity {
+		product.Quantity = *req.Quantity
 	}
 
 	preCategoryIDs := []string{}
@@ -354,11 +354,10 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 		return res, err
 	}
 
-	res.Product.Product = product
 	res.Product.Categories = categories
-	subPhotos := s.getProductSubPhotos(ctx, product)
+	subPhotos := s.getProductSubPhotos(ctx, *product)
 	res.Product.SubPhotos = subPhotos
-	s.removeProductSubPhotos(ctx, product)
+	res.Product.Product = s.removeProductSubPhotos(ctx, *product)
 
 	return res, nil
 }
@@ -436,7 +435,7 @@ func (s *pgService) getProductcategogyStringIDArray(ctx context.Context, product
 	return stringIDArray
 }
 
-func (s *pgService) getProductSubPhotos(ctx context.Context, product *pgModel.Product) []string {
+func (s *pgService) getProductSubPhotos(ctx context.Context, product pgModel.Product) []string {
 	subPhotos := []string{}
 
 	if product.FirstSubPhoto != "" {
@@ -454,8 +453,9 @@ func (s *pgService) getProductSubPhotos(ctx context.Context, product *pgModel.Pr
 	return subPhotos
 }
 
-func (s *pgService) removeProductSubPhotos(ctx context.Context, product *pgModel.Product) {
+func (s *pgService) removeProductSubPhotos(ctx context.Context, product pgModel.Product) *pgModel.Product {
 	product.FirstSubPhoto = ""
 	product.SecondSubPhoto = ""
 	product.ThirdSubPhoto = ""
+	return &product
 }

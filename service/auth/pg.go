@@ -7,6 +7,7 @@ import (
 
 	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 	"github.com/phungvandat/life-cafe-backend/util/contextkey"
+	errors "github.com/phungvandat/life-cafe-backend/util/error"
 )
 
 // pgService implmenter for auth service in postgres
@@ -24,7 +25,7 @@ func NewPGService(db *gorm.DB) Service {
 func (s *pgService) AuthenticateUser(ctx context.Context) error {
 	ctxUserID, check := ctx.Value(contextkey.UserIDContextKey).(string)
 	if !check {
-		return NotLoggedInError
+		return errors.NotLoggedInError
 	}
 	userID, err := pgModel.UUIDFromString(ctxUserID)
 	if err != nil {
@@ -36,11 +37,11 @@ func (s *pgService) AuthenticateUser(ctx context.Context) error {
 
 	err = s.db.Find(user, user).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
-		return AccountNotFoundError
+		return errors.AccountNotFoundError
 	}
 
 	if user.Active == false {
-		return AccountIsLockedError
+		return errors.AccountIsLockedError
 	}
 
 	return nil
@@ -49,7 +50,7 @@ func (s *pgService) AuthenticateUser(ctx context.Context) error {
 func (s *pgService) AuthenticateAdmin(ctx context.Context) error {
 	ctxUserID, check := ctx.Value(contextkey.UserIDContextKey).(string)
 	if !check {
-		return NotLoggedInError
+		return errors.NotLoggedInError
 	}
 	userID, err := pgModel.UUIDFromString(ctxUserID)
 	if err != nil {
@@ -61,15 +62,15 @@ func (s *pgService) AuthenticateAdmin(ctx context.Context) error {
 
 	err = s.db.Find(user, user).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
-		return AccountNotFoundError
+		return errors.AccountNotFoundError
 	}
 
 	if user.Active == false {
-		return AccountIsLockedError
+		return errors.AccountIsLockedError
 	}
 
 	if user.Role != "admin" {
-		return AccessDeniedError
+		return errors.AccessDeniedError
 	}
 
 	return nil

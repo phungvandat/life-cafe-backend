@@ -1,5 +1,20 @@
 package constants
 
-var USER_ROLE = map[string]string{
-	"admin": "admin",
+// UserRole val
+var UserRole = map[string]string{
+	"master": "master",
+	"admin":  "admin",
+}
+
+// OrderType val
+var OrderType = map[string]string{
+	"import": "import",
+	"export": "export",
+}
+
+// OrderStatus val
+var OrderStatus = map[string]string{
+	"created":    "created",
+	"delivering": "delivering",
+	"done":       "done",
 }

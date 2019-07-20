@@ -1,4 +1,4 @@
-package user
+package error
 
 import (
 	"net/http"
@@ -6,15 +6,19 @@ import (
 
 //Error Declaration
 var (
-	MissingUsernameError   = missingUsernameError{}
-	MissingFullnameError   = missingFullnameError{}
-	MissingPasswordError   = missingPasswordError{}
-	MissingRoleError       = missingRoleError{}
-	UserNotFoundError      = userNotFoundError{}
-	WrongPasswordError     = wrongPasswordError{}
-	UsernameIsExistedError = usernameIsExistedError{}
-	InvalidRoleError       = invalidRoleError{}
-	InvalidUsernameError   = invalidUsernameError{}
+	MissingUsernameError           = missingUsernameError{}
+	MissingFullnameError           = missingFullnameError{}
+	MissingPasswordError           = missingPasswordError{}
+	MissingRoleError               = missingRoleError{}
+	UserNotFoundError              = userNotFoundError{}
+	WrongPasswordError             = wrongPasswordError{}
+	UsernameIsExistedError         = usernameIsExistedError{}
+	InvalidRoleError               = invalidRoleError{}
+	InvalidUsernameError           = invalidUsernameError{}
+	UserPhoneNumberIsRequiredError = userPhoneNumberIsRequiredError{}
+	InvalidUserPhoneNumberError    = invalidUserPhoneNumberError{}
+	PermissionDeniedError          = permissionDeniedError{}
+	InvalidUserIDError             = invalidUserIDError{}
 )
 
 // Error missing username
@@ -113,5 +117,49 @@ func (invalidUsernameError) Error() string {
 }
 
 func (invalidUsernameError) StatusCode() int {
+	return http.StatusBadRequest
+}
+
+//
+type userPhoneNumberIsRequiredError struct{}
+
+func (userPhoneNumberIsRequiredError) Error() string {
+	return "User phone number is required"
+}
+
+func (userPhoneNumberIsRequiredError) StatusCode() int {
+	return http.StatusBadRequest
+}
+
+//
+type invalidUserPhoneNumberError struct{}
+
+func (invalidUserPhoneNumberError) Error() string {
+	return "Invalid user phone number"
+}
+
+func (invalidUserPhoneNumberError) StatusCode() int {
+	return http.StatusBadRequest
+}
+
+//
+type permissionDeniedError struct{}
+
+func (permissionDeniedError) Error() string {
+	return "Permission denied"
+}
+
+func (permissionDeniedError) StatusCode() int {
+	return http.StatusForbidden
+}
+
+//
+type invalidUserIDError struct{}
+
+func (invalidUserIDError) Error() string {
+	return "Invalid user ID"
+}
+
+func (invalidUserIDError) StatusCode() int {
 	return http.StatusBadRequest
 }

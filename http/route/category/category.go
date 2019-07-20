@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/phungvandat/life-cafe-backend/endpoints"
-	decode "github.com/phungvandat/life-cafe-backend/http/decode/json/product_category"
+	decode "github.com/phungvandat/life-cafe-backend/http/decode/json/category"
 	"github.com/phungvandat/life-cafe-backend/http/encode"
 	"github.com/phungvandat/life-cafe-backend/http/middlewares"
 )

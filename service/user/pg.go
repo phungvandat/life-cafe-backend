@@ -8,6 +8,8 @@ import (
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 	"github.com/phungvandat/life-cafe-backend/util/config"
+	"github.com/phungvandat/life-cafe-backend/util/contextkey"
+	errors "github.com/phungvandat/life-cafe-backend/util/error"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
 
@@ -25,6 +27,14 @@ func NewPGService(db *gorm.DB, spRollback helper.SagasService) Service {
 	}
 }
 
+func (s *pgService) RollbackTransaction(_ context.Context, transactionID string) error {
+	return s.spRollback.RollbackTransaction(transactionID)
+}
+
+func (s *pgService) CommitTransaction(_ context.Context, transactionID string) error {
+	return s.spRollback.CommitTransaction(transactionID)
+}
+
 func (s *pgService) Create(ctx context.Context, req requestModel.CreateUserRequest) (*responseModel.CreateUserResponse, error) {
 	tx := s.db.Begin()
 	transactionID := (pgModel.NewUUID()).String()
@@ -36,7 +46,7 @@ func (s *pgService) Create(ctx context.Context, req requestModel.CreateUserReque
 	userExisted := &pgModel.User{Username: req.Username}
 	err := tx.Find(userExisted, userExisted).Error
 	if err == nil {
-		return res, UsernameIsExistedError
+		return res, errors.UsernameIsExistedError
 	}
 
 	user := &pgModel.User{
@@ -65,12 +75,12 @@ func (s *pgService) LogIn(ctx context.Context, req requestModel.UserLogInRequest
 	user := &pgModel.User{Username: username}
 	err := s.db.Find(user, user).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
-		return nil, UserNotFoundError
+		return nil, errors.UserNotFoundError
 	}
 	checkPassword := user.ComparePassword(password)
 
 	if checkPassword == false {
-		return nil, WrongPasswordError
+		return nil, errors.WrongPasswordError
 	}
 	clasms := helper.TokenClaims{
 		UserID:   user.Model.ID.String(),
@@ -108,10 +118,38 @@ func (s *pgService) CreateMaster(_ context.Context) error {
 	return err
 }
 
-func (s *pgService) RollbackTransaction(_ context.Context, transactionID string) error {
-	return s.spRollback.RollbackTransaction(transactionID)
-}
+func (s *pgService) GetUser(ctx context.Context, req requestModel.GetUserRequest) (*responseModel.GetUserResponse, error) {
+	res := &responseModel.GetUserResponse{}
 
-func (s *pgService) CommitTransaction(_ context.Context, transactionID string) error {
-	return s.spRollback.CommitTransaction(transactionID)
+	ctxUserID, check := ctx.Value(contextkey.UserIDContextKey).(string)
+
+	userSiginRole := ctx.Value(contextkey.UserRoleContextKey).(string)
+
+	if !check {
+		return res, errors.NotLoggedInError
+	}
+
+	if userSiginRole != "admin" && userSiginRole != "master" && ctxUserID != req.ParamUserID {
+		return res, errors.PermissionDeniedError
+	}
+
+	userIDUUID, _ := pgModel.UUIDFromString(req.ParamUserID)
+	user := &pgModel.User{
+		Model: pgModel.Model{
+			ID: userIDUUID,
+		},
+	}
+
+	err := s.db.Find(user, user).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.UserNotFoundError
+		}
+		return res, err
+	}
+
+	res.User = user
+
+	return res, nil
 }
