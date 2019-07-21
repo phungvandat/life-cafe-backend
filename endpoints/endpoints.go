@@ -31,6 +31,7 @@ func MakeServerEndpoints(s service.Service) Endpoints {
 		},
 		UploadEndpoint: upload.UploadEndpoint{
 			UploadImages: upload.MakeUploadImages(s),
+			GetImageFile: upload.MakeGetImageFile(s),
 		},
 		CategoryEndpoint: category.CategoryEndpoint{
 			CreateCategory: category.MakeCreateEndpoint(s),

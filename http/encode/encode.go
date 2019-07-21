@@ -3,7 +3,9 @@ package encode
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
+	"os"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 )
@@ -11,6 +13,15 @@ import (
 // encodeResponse is the common method to encode all response types to the client.
 func EncodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	return kithttp.EncodeJSONResponse(ctx, w, response)
+}
+
+// EncodeFileResponse func
+func EncodeFileResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	w.Header().Set("Content-Type", "image/jpeg")
+	file := response.(*os.File)
+	defer file.Close()
+	_, err := io.Copy(w, file)
+	return err
 }
 
 func EncodeError(ctx context.Context, err error, w http.ResponseWriter) {
@@ -37,6 +48,6 @@ func encodeJSONError(_ context.Context, err error, w http.ResponseWriter) {
 	w.WriteHeader(code)
 	// enforce json response
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"error": err.Error(),
+		"message": err.Error(),
 	})
 }

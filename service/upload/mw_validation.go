@@ -3,6 +3,7 @@ package upload
 import (
 	"context"
 	"net/http"
+	"os"
 	"strings"
 
 	serviceModel "github.com/phungvandat/life-cafe-backend/model/service"
@@ -37,4 +38,8 @@ func (mw validationMiddleware) UploadImages(ctx context.Context, inputFiles []se
 		}
 	}
 	return mw.Service.UploadImages(ctx, inputFiles)
+}
+
+func (mw validationMiddleware) GetImageFile(ctx context.Context, path string) (*os.File, error) {
+	return mw.Service.GetImageFile(ctx, path)
 }

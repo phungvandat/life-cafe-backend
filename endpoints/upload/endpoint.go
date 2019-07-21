@@ -6,4 +6,5 @@ import (
 
 type UploadEndpoint struct {
 	UploadImages endpoint.Endpoint
+	GetImageFile endpoint.Endpoint
 }

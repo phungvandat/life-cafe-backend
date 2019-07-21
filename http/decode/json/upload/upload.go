@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-chi/chi"
+
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	serviceModel "github.com/phungvandat/life-cafe-backend/model/service"
 )
@@ -31,4 +33,10 @@ func UploadImagesRequest(_ context.Context, r *http.Request) (interface{}, error
 		})
 	}
 	return req, nil
+}
+
+// GetImageFileRequest func
+func GetImageFileRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	filePath := chi.URLParam(r, "file_path")
+	return filePath, nil
 }
