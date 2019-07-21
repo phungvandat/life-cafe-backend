@@ -12,9 +12,7 @@ import (
 // MakeUploadImages func
 func MakeUploadImages(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var (
-			inputFiles = request.(requestModel.UploadImagesRequest)
-		)
+		var inputFiles = request.(requestModel.UploadImagesRequest)
 		link, err := s.UploadService.UploadImages(ctx, inputFiles)
 		if err != nil {
 			return nil, err
@@ -23,5 +21,19 @@ func MakeUploadImages(s service.Service) endpoint.Endpoint {
 		return responseModel.UploadImagesResponse{
 			Link: link,
 		}, nil
+	}
+}
+
+// MakeGetImageFile func
+func MakeGetImageFile(s service.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		var path = request.(string)
+		file, err := s.UploadService.GetImageFile(ctx, path)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return file, nil
 	}
 }

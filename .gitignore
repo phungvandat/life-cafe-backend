@@ -11,3 +11,6 @@ bin/
 # go module
 go.mod
 go.sum
+
+# public image folder
+public/images/*

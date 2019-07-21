@@ -44,7 +44,16 @@ func (s *pgService) UploadImages(ctx context.Context, inputFiles []serviceModel.
 			return []string{}, errors.CopyFileError
 		}
 
-		arrImageName = append(arrImageName, fileName)
+		arrImageName = append(arrImageName, "public/images/"+fileName)
 	}
 	return arrImageName, nil
+}
+
+func (s *pgService) GetImageFile(ctx context.Context, path string) (*os.File, error) {
+	file, err := os.Open("public/images/" + path)
+
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
 }
