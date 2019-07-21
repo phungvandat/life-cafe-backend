@@ -21,8 +21,9 @@ type GetCategoriesResponse struct {
 
 // Category struct
 type Category struct {
-	ParentCategory *pgModel.Category `json:"parent_category,omitempty"`
 	*pgModel.Category
+	ChildrenCategories []*Category `json:"children_categories,omitempty"`
+	ParentCategory     *Category   `json:"parent_category,omitempty"`
 }
 
 // UpdateCategoryResponse struct

@@ -30,11 +30,12 @@ func GetCategoryRequest(_ context.Context, r *http.Request) (interface{}, error)
 // GetCategoriesRequest func
 func GetCategoriesRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req requestModel.GetCategoriesRequest
-	skip := r.URL.Query().Get("skip")
-	limit := r.URL.Query().Get("limit")
 
-	req.Skip = skip
-	req.Limit = limit
+	req.Skip = r.URL.Query().Get("skip")
+	req.Limit = r.URL.Query().Get("limit")
+	req.Slug = r.URL.Query().Get("slug")
+	req.ParentCategoryExist = r.URL.Query().Get("parent_category_exist")
+
 	return req, nil
 }
 

@@ -2,6 +2,7 @@ package category
 
 import (
 	"context"
+	"sync"
 
 	"github.com/jinzhu/gorm"
 	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
@@ -91,21 +92,12 @@ func (s *pgService) GetCategory(ctx context.Context, req requestModel.GetCategor
 	}
 
 	if category.ParentCategoryID != nil {
-		parentCategory := &pgModel.Category{
-			Model: pgModel.Model{
-				ID: *category.ParentCategoryID,
-			},
+		parentCategory, err := s.getParentCategory(ctx, *category)
+
+		if err != nil {
+			return nil, err
 		}
-		err = s.db.Find(parentCategory, parentCategory).Error
-		if err == nil {
-			categoryRes.Category.ParentCategory = &pgModel.Category{
-				Model: pgModel.Model{
-					ID: parentCategory.ID,
-				},
-				Name:  parentCategory.Name,
-				Color: parentCategory.Color,
-			}
-		}
+		categoryRes.Category.ParentCategory = parentCategory
 	}
 
 	return categoryRes, nil
@@ -122,14 +114,21 @@ func (s *pgService) GetCategories(ctx context.Context, req requestModel.GetCateg
 		limit = "-1"
 	}
 
-	arrCategory := []struct {
-		*pgModel.Category
-		ParentName  *string `json:"parent_name"`
-		ParentColor *string `json:"parent_color"`
-	}{}
+	arrCategory := []*pgModel.Category{}
+
+	query := ""
+	if req.ParentCategoryExist == "false" {
+		query += "parent_category_id IS NULL"
+	} else if req.ParentCategoryExist == "true" {
+		query += "parent_category_id IS NOT NULL"
+	}
+
+	if req.Slug != "" {
+		query += " AND slug ='" + req.Slug + "'"
+	}
+
 	err := s.db.Limit(limit).Offset(skip).Table("categories").
-		Select("categories.*, parent.name as parent_name, parent.color as parent_color").
-		Joins("LEFT JOIN categories as parent ON categories.parent_category_id = parent.id").
+		Where(query).
 		Scan(&arrCategory).Error
 
 	if err != nil {
@@ -138,17 +137,13 @@ func (s *pgService) GetCategories(ctx context.Context, req requestModel.GetCateg
 
 	listCategory := []*responseModel.Category{}
 	for _, item := range arrCategory {
-		category := &responseModel.Category{
-			Category: item.Category,
+		childrens, err := s.getChildrenCategories(ctx, *item)
+		if err != nil {
+			return nil, err
 		}
-		if item.ParentCategoryID != nil {
-			category.ParentCategory = &pgModel.Category{
-				Model: pgModel.Model{
-					ID: *item.ParentCategoryID,
-				},
-				Name:  *item.ParentName,
-				Color: *item.ParentColor,
-			}
+		category := &responseModel.Category{
+			Category:           item,
+			ChildrenCategories: childrens,
 		}
 		listCategory = append(listCategory, category)
 	}
@@ -178,10 +173,9 @@ func (s *pgService) UpdateCategory(ctx context.Context, req requestModel.UpdateC
 		return nil, err
 	}
 
-	var parentCategory *pgModel.Category
 	if req.ParentCategoryID != "" {
 		parentCategoryID, _ := pgModel.UUIDFromString(req.ParentCategoryID)
-		parentCategory = &pgModel.Category{
+		parentCategory := &pgModel.Category{
 			Model: pgModel.Model{
 				ID: parentCategoryID,
 			},
@@ -196,27 +190,6 @@ func (s *pgService) UpdateCategory(ctx context.Context, req requestModel.UpdateC
 			return nil, err
 		}
 		category.ParentCategoryID = &parentCategoryID
-	} else if category.ParentCategoryID != nil {
-		parentCategory = &pgModel.Category{
-			Model: pgModel.Model{
-				ID: *category.ParentCategoryID,
-			},
-		}
-
-		err = s.db.Find(parentCategory, parentCategory).Error
-		if err != nil {
-			parentCategory = nil
-		}
-	}
-
-	if parentCategory != nil {
-		categoryRes.Category.ParentCategory = &pgModel.Category{
-			Model: pgModel.Model{
-				ID: parentCategory.ID,
-			},
-			Name:  parentCategory.Name,
-			Color: parentCategory.Color,
-		}
 	}
 
 	if req.Name != "" {
@@ -246,4 +219,80 @@ func (s *pgService) UpdateCategory(ctx context.Context, req requestModel.UpdateC
 	categoryRes.Category.Category = category
 
 	return categoryRes, nil
+}
+
+func (s *pgService) getParentCategory(ctx context.Context, category pgModel.Category) (*responseModel.Category, error) {
+	res := &responseModel.Category{}
+
+	categoryRes := &pgModel.Category{
+		Model: pgModel.Model{
+			ID: *category.ParentCategoryID,
+		},
+	}
+
+	err := s.db.Find(categoryRes, categoryRes).Error
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Category = &pgModel.Category{
+		Model: pgModel.Model{
+			ID: categoryRes.ID,
+		},
+		Name:  categoryRes.Name,
+		Slug:  categoryRes.Slug,
+		Color: categoryRes.Color,
+	}
+
+	if categoryRes.ParentCategoryID != nil {
+		parentCategory, err := s.getParentCategory(ctx, *categoryRes)
+		if err != nil {
+			return res, err
+		}
+		res.ParentCategory = parentCategory
+	}
+
+	return res, nil
+}
+
+func (s *pgService) getChildrenCategories(ctx context.Context, category pgModel.Category) ([]*responseModel.Category, error) {
+	res := []*responseModel.Category{}
+
+	childrenCategories := []*pgModel.Category{}
+
+	err := s.db.Table("categories").
+		Where("parent_category_id = ?", category.ID).
+		Scan(&childrenCategories).Error
+
+	if err != nil {
+		return res, err
+	}
+	wg := sync.WaitGroup{}
+
+	for _, item := range childrenCategories {
+		wg.Add(1)
+		go func(item *pgModel.Category) {
+			defer wg.Done()
+			childrens, errFunc := s.getChildrenCategories(ctx, *item)
+			if errFunc != nil {
+				err = errFunc
+				return
+			}
+			categoryRes := &responseModel.Category{
+				Category: &pgModel.Category{
+					Model: pgModel.Model{
+						ID: item.ID,
+					},
+					Name:  item.Name,
+					Slug:  item.Slug,
+					Color: item.Color,
+				},
+				ChildrenCategories: childrens,
+			}
+			res = append(res, categoryRes)
+		}(item)
+	}
+	wg.Wait()
+	return res, nil
 }
