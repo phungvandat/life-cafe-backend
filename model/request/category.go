@@ -15,8 +15,10 @@ type GetCategoryRequest struct {
 
 // GetCategoriesRequest struct
 type GetCategoriesRequest struct {
-	Skip  string `json:"skip,omitempty"`
-	Limit string `json:"limit,omitempty"`
+	Skip                string `json:"skip,omitempty"`
+	Limit               string `json:"limit,omitempty"`
+	Slug                string `json:"string,omitempty"`
+	ParentCategoryExist string `json:"parent_category_exist,omitempty"`
 }
 
 // UpdateCategoryRequest struct
