@@ -2,5 +2,5 @@ package response
 
 // UploadImagesResponse struct
 type UploadImagesResponse struct {
-	Link []string `json:"link,omitempty"`
+	Links []string `json:"links,omitempty"`
 }

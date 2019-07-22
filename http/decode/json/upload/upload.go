@@ -37,6 +37,6 @@ func UploadImagesRequest(_ context.Context, r *http.Request) (interface{}, error
 
 // GetImageFileRequest func
 func GetImageFileRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	filePath := chi.URLParam(r, "file_path")
+	filePath := chi.URLParam(r, "filePath")
 	return filePath, nil
 }

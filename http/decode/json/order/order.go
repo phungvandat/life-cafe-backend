@@ -20,7 +20,7 @@ func CreateOrderRequest(_ context.Context, r *http.Request) (interface{}, error)
 // GetOrderRequest func
 func GetOrderRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req requestModel.GetOrderRequest
-	orderID := chi.URLParam(r, "order_id")
+	orderID := chi.URLParam(r, "orderID")
 	req.ParamOrderID = orderID
 	return req, nil
 }
@@ -41,7 +41,7 @@ func GetOrdersRequest(_ context.Context, r *http.Request) (interface{}, error) {
 // UpdateOrderRequest func
 func UpdateOrderRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req requestModel.UpdateOrderRequest
-	orderID := chi.URLParam(r, "order_id")
+	orderID := chi.URLParam(r, "orderID")
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return req, err

@@ -15,7 +15,7 @@ func PublicResourceRoute(endpoints endpoints.Endpoints,
 	options []httptransport.ServerOption) func(r chi.Router) {
 	return func(r chi.Router) {
 		// Upload image
-		r.Get("/images/{file_path}", httptransport.NewServer(
+		r.Get("/images/{filePath}", httptransport.NewServer(
 			endpoints.UploadEndpoint.GetImageFile,
 			uploadDecode.GetImageFileRequest,
 			encode.EncodeFileResponse,

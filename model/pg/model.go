@@ -10,9 +10,9 @@ import (
 // Model is base model
 type Model struct {
 	ID        UUID       `sql:",type:uuid" json:"id,omitempty"`
-	CreatedAt *time.Time `sql:"default:now()" json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty,omitempty"`
+	CreatedAt *time.Time `sql:"default:now()" json:"createdAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	DeletedAt *time.Time `json:"deletedAt,omitempty,omitempty"`
 }
 
 // BeforeCreate prepare data before create data

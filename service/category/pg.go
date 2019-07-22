@@ -243,6 +243,7 @@ func (s *pgService) getParentCategory(ctx context.Context, category pgModel.Cate
 		Name:  categoryRes.Name,
 		Slug:  categoryRes.Slug,
 		Color: categoryRes.Color,
+		Photo: categoryRes.Photo,
 	}
 
 	if categoryRes.ParentCategoryID != nil {
@@ -280,14 +281,7 @@ func (s *pgService) getChildrenCategories(ctx context.Context, category pgModel.
 				return
 			}
 			categoryRes := &responseModel.Category{
-				Category: &pgModel.Category{
-					Model: pgModel.Model{
-						ID: item.ID,
-					},
-					Name:  item.Name,
-					Slug:  item.Slug,
-					Color: item.Color,
-				},
+				Category:           item,
 				ChildrenCategories: childrens,
 			}
 			res = append(res, categoryRes)

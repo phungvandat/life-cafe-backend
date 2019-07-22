@@ -14,7 +14,7 @@ type User struct {
 	Password    string `json:"-"`
 	Role        string `json:"role,omitempty"`
 	Active      bool   `json:"active,omitempty" sql:"default:true"`
-	PhoneNumber string `json:"phone_number,omitempty"`
+	PhoneNumber string `json:"phoneNumber,omitempty"`
 	Address     string `json:"address,omitempty"`
 	Email       string `json:"email,omitempty"`
 }

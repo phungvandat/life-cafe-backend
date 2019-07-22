@@ -21,7 +21,7 @@ func CreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 func GetCategoryRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req requestModel.GetCategoryRequest
 
-	categoryID := chi.URLParam(r, "category_id")
+	categoryID := chi.URLParam(r, "categoryID")
 	req.ParamCategoryID = categoryID
 
 	return req, nil
@@ -34,7 +34,7 @@ func GetCategoriesRequest(_ context.Context, r *http.Request) (interface{}, erro
 	req.Skip = r.URL.Query().Get("skip")
 	req.Limit = r.URL.Query().Get("limit")
 	req.Slug = r.URL.Query().Get("slug")
-	req.ParentCategoryExist = r.URL.Query().Get("parent_category_exist")
+	req.ParentCategoryExist = r.URL.Query().Get("parentCategoryExist")
 
 	return req, nil
 }
@@ -42,7 +42,7 @@ func GetCategoriesRequest(_ context.Context, r *http.Request) (interface{}, erro
 // UpdateCategoryRequest func
 func UpdateCategoryRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req requestModel.UpdateCategoryRequest
-	categoryID := chi.URLParam(r, "category_id")
+	categoryID := chi.URLParam(r, "categoryID")
 	err := json.NewDecoder(r.Body).Decode(&req)
 
 	if err != nil {
