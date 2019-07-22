@@ -25,7 +25,7 @@ func OrderRoute(endpoints endpoints.Endpoints,
 			options...,
 		).ServeHTTP)
 		// Get order
-		r.Get("/{order_id}", httptransport.NewServer(
+		r.Get("/{orderID}", httptransport.NewServer(
 			middlewares.AuthMiddleware.AuthUser(
 				endpoints.OrderEndpoint.GetOrderEndpoint,
 			),
@@ -43,7 +43,7 @@ func OrderRoute(endpoints endpoints.Endpoints,
 			options...,
 		).ServeHTTP)
 		// Update order
-		r.Put("/{order_id}", httptransport.NewServer(
+		r.Put("/{orderID}", httptransport.NewServer(
 			middlewares.AuthMiddleware.AuthAdmin(
 				endpoints.OrderEndpoint.UpdateOrderEndpoint,
 			),

@@ -7,13 +7,13 @@ import (
 // CreateProductResponse struct
 type CreateProductResponse struct {
 	Product       *Product `json:"product,omitempty"`
-	TransactionID *string  `json:"transaction_id,omitempty"`
+	TransactionID *string  `json:"transactionID,omitempty"`
 }
 
 // Product struct
 type Product struct {
 	*pgModel.Product
-	SubPhotos  []string            `json:"sub_photos"`
+	SubPhotos  []string            `json:"subPhotos"`
 	Categories []*pgModel.Category `json:"categories"`
 }
 
@@ -30,5 +30,5 @@ type GetProductsResponse struct {
 // UpdateProductResponse struct
 type UpdateProductResponse struct {
 	Product       *Product `json:"product,omitempty"`
-	TransactionID *string  `json:"transaction_id,omitempty"`
+	TransactionID *string  `json:"transactionID,omitempty"`
 }

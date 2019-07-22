@@ -9,14 +9,14 @@ import (
 type Order struct {
 	Model
 	Type                string `json:"type,omitempty"`
-	CreatorID           *UUID  `json:"creator_id,omitempty"`
+	CreatorID           *UUID  `json:"creatorIDd,omitempty"`
 	Note                string `json:"note,omitempty"`
-	CustomerID          *UUID  `json:"customer_id,omitempty"`
+	CustomerID          *UUID  `json:"customerIDd,omitempty"`
 	Status              string `json:"status,omitempty"`
-	ImplementerID       *UUID  `json:"implementer_id,omitempty"`
-	ReceiverPhoneNumber string `json:"receiver_phone_number,omitempty"`
-	ReceiverAddress     string `json:"receiver_address,omitempty"`
-	ReceiverFullname    string `json:"receiver_fullname,omitempty"`
+	ImplementerID       *UUID  `json:"implementerIDd,omitempty"`
+	ReceiverPhoneNumber string `json:"receiverPhoneNumber,omitempty"`
+	ReceiverAddress     string `json:"receiverAddress,omitempty"`
+	ReceiverFullname    string `json:"receiverFullname,omitempty"`
 }
 
 // BeforeCreate prepare data before create data
@@ -28,10 +28,10 @@ func (u *Order) BeforeCreate(scope *gorm.Scope) error {
 // ProductOrder struct
 type ProductOrder struct {
 	Model
-	ProductID     *UUID `json:"product_id,omitempty"`
-	OrderID       *UUID `json:"order_id,omitempty"`
-	OrderQuantity int   `json:"order_quantity,omitempty"`
-	RealPrice     int   `json:"real_price,omitempty"`
+	ProductID     *UUID `json:"productIDd,omitempty"`
+	OrderID       *UUID `json:"orderIDd,omitempty"`
+	OrderQuantity int   `json:"orderQuantity,omitempty"`
+	RealPrice     int   `json:"realPrice,omitempty"`
 }
 
 // BeforeCreate prepare data before create data

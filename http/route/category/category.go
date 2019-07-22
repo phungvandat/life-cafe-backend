@@ -23,7 +23,7 @@ func CategoryRoute(endpoints endpoints.Endpoints,
 			options...,
 		).ServeHTTP)
 		// Get category
-		r.Get("/{category_id}", httptransport.NewServer(
+		r.Get("/{categoryID}", httptransport.NewServer(
 			endpoints.CategoryEndpoint.GetCategory,
 			decode.GetCategoryRequest,
 			encode.EncodeResponse,
@@ -37,7 +37,7 @@ func CategoryRoute(endpoints endpoints.Endpoints,
 			options...,
 		).ServeHTTP)
 		// Update category
-		r.Put("/{category_id}", httptransport.NewServer(
+		r.Put("/{categoryID}", httptransport.NewServer(
 			middlewares.AuthMiddleware.AuthAdmin(endpoints.CategoryEndpoint.UpdateCategory),
 			decode.UpdateCategoryRequest,
 			encode.EncodeResponse,

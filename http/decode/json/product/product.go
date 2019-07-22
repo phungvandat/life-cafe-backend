@@ -20,7 +20,7 @@ func CreateProductRequest(_ context.Context, r *http.Request) (interface{}, erro
 // GetProductRequest func
 func GetProductRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req requestModel.GetProductRequest
-	productID := chi.URLParam(r, "product_id")
+	productID := chi.URLParam(r, "productID")
 
 	req.ParamProductID = productID
 	return req, nil
@@ -46,7 +46,7 @@ func UpdateProductRequest(_ context.Context, r *http.Request) (interface{}, erro
 		return nil, err
 	}
 
-	productID := chi.URLParam(r, "product_id")
+	productID := chi.URLParam(r, "productID")
 
 	req.ParamProductID = productID
 	return req, nil

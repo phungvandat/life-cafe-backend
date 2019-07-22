@@ -7,7 +7,7 @@ type CreateUserRequest struct {
 	Password    string `json:"password,omitempty"`
 	Role        string `json:"role,omitempty"`
 	Active      bool   `json:"active,omitempty"`
-	PhoneNumber string `json:"phone_number,omitempty"`
+	PhoneNumber string `json:"phoneNumber,omitempty"`
 	Address     string `json:"address,omitempty"`
 	Email       string `json:"email,omitempty"`
 }
@@ -20,5 +20,5 @@ type UserLogInRequest struct {
 
 // GetUserRequest struct
 type GetUserRequest struct {
-	ParamUserID string `json:"user_id,omitempty"`
+	ParamUserID string `json:"userID,omitempty"`
 }

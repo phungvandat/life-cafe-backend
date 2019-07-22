@@ -12,10 +12,10 @@ import (
 type Product struct {
 	Model
 	Name           string `json:"name,omitempty"`
-	MainPhoto      string `json:"main_photo,omitempty"`
-	FirstSubPhoto  string `json:"first_sub_photo,omitempty"`
-	SecondSubPhoto string `json:"second_sub_photo,omitempty"`
-	ThirdSubPhoto  string `json:"third_sub_photo,omitempty"`
+	MainPhoto      string `json:"mainPhoto,omitempty"`
+	FirstSubPhoto  string `json:"firstSubPhoto,omitempty"`
+	SecondSubPhoto string `json:"secondSubPhoto,omitempty"`
+	ThirdSubPhoto  string `json:"thirdSubPhoto,omitempty"`
 	Quantity       int    `json:"quantity,omitempty"`
 	Price          int    `json:"price,omitempty"`
 	Flag           int    `json:"flag,omitempty"`
@@ -44,8 +44,8 @@ func (u *Product) BeforeSave(scope *gorm.Scope) error {
 // ProductCategory struct
 type ProductCategory struct {
 	Model
-	ProductID  *UUID `json:"product_id,omitempty"`
-	CategoryID *UUID `json:"category_id,omitempty"`
+	ProductID  *UUID `json:"productID,omitempty"`
+	CategoryID *UUID `json:"categoryID,omitempty"`
 }
 
 // BeforeCreate prepare data before create data

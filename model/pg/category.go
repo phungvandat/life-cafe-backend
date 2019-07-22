@@ -13,7 +13,7 @@ type Category struct {
 	Model
 	Name             string `json:"name,omitempty"`
 	Photo            string `json:"photo,omitempty"`
-	ParentCategoryID *UUID  `json:"parent_category_id,omitempty"`
+	ParentCategoryID *UUID  `json:"parentCategoryID,omitempty"`
 	Slug             string `json:"slug,omitempty"`
 	Color            string `json:"color,omitempty"`
 }

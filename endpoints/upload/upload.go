@@ -13,13 +13,13 @@ import (
 func MakeUploadImages(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var inputFiles = request.(requestModel.UploadImagesRequest)
-		link, err := s.UploadService.UploadImages(ctx, inputFiles)
+		links, err := s.UploadService.UploadImages(ctx, inputFiles)
 		if err != nil {
 			return nil, err
 		}
 
 		return responseModel.UploadImagesResponse{
-			Link: link,
+			Links: links,
 		}, nil
 	}
 }

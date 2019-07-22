@@ -7,22 +7,22 @@ import (
 // CreateOrderResponse struct
 type CreateOrderResponse struct {
 	Order         *Order  `json:"order,omitempty"`
-	TransactionID *string `json:"transaction_id,omitempty"`
+	TransactionID *string `json:"transactionID,omitempty"`
 }
 
 // Order struct
 type Order struct {
 	*pgModel.Order
 	Customer         *pgModel.User       `json:"customer,omitempty"`
-	OrderProductInfo []*OrderProductInfo `json:"order_product_info,omitempty"`
+	OrderProductInfo []*OrderProductInfo `json:"orderProductInfo,omitempty"`
 	Creator          *pgModel.User       `json:"creator,omitempty"`
 	Implementer      *pgModel.User       `json:"implementer,omitempty"`
 }
 
 // OrderProductInfo struct
 type OrderProductInfo struct {
-	OrderQuantity int              `json:"order_quantity,omitempty"`
-	RealPrice     int              `json:"real_price,omitempty"`
+	OrderQuantity int              `json:"orderQuantity,omitempty"`
+	RealPrice     int              `json:"realPrice,omitempty"`
 	Product       *pgModel.Product `json:"product,omitempty"`
 }
 
@@ -39,5 +39,5 @@ type GetOrdersResponse struct {
 // UpdateOrderResponse struct
 type UpdateOrderResponse struct {
 	Order         *Order  `json:"order,omitempty"`
-	TransactionID *string `json:"transaction_id,omitempty"`
+	TransactionID *string `json:"transactionID,omitempty"`
 }

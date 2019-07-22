@@ -25,7 +25,7 @@ func ProductRoute(endpoints endpoints.Endpoints,
 			options...,
 		).ServeHTTP)
 		// Get product
-		r.Get("/{product_id}", httptransport.NewServer(
+		r.Get("/{productID}", httptransport.NewServer(
 			endpoints.ProductEndpoint.GetProductEndpoint,
 			decode.GetProductRequest,
 			encode.EncodeResponse,
@@ -39,7 +39,7 @@ func ProductRoute(endpoints endpoints.Endpoints,
 			options...,
 		).ServeHTTP)
 		// Update product
-		r.Put("/{product_id}", httptransport.NewServer(
+		r.Put("/{productID}", httptransport.NewServer(
 			middlewares.AuthMiddleware.AuthAdmin(
 				endpoints.ProductEndpoint.UpdateProductEndpoint,
 			),
