@@ -19,6 +19,7 @@ import (
 	authSvc "github.com/phungvandat/life-cafe-backend/service/auth"
 	categorySvc "github.com/phungvandat/life-cafe-backend/service/category"
 	orderSvc "github.com/phungvandat/life-cafe-backend/service/order"
+	photoSvc "github.com/phungvandat/life-cafe-backend/service/photo"
 	productSvc "github.com/phungvandat/life-cafe-backend/service/product"
 	uploadSvc "github.com/phungvandat/life-cafe-backend/service/upload"
 	userSvc "github.com/phungvandat/life-cafe-backend/service/user"
@@ -66,6 +67,11 @@ func main() {
 		pgDB, closeDB = pg.New(config.GetPGDataSourceEnv())
 		spRollback    = helper.NewSagasService()
 
+		photoService = service.Compose(
+			photoSvc.NewPGService(pgDB, spRollback),
+			photoSvc.ValidationMiddleware(),
+		).(photoSvc.Service)
+
 		userService = service.Compose(
 			userSvc.NewPGService(pgDB, spRollback),
 			userSvc.ValidationMiddleware(),
@@ -87,7 +93,7 @@ func main() {
 		).(categorySvc.Service)
 
 		productService = service.Compose(
-			productSvc.NewPGService(pgDB, categoryService, spRollback),
+			productSvc.NewPGService(pgDB, categoryService, photoService, spRollback),
 			productSvc.ValidationMiddleware(),
 		).(productSvc.Service)
 
@@ -103,6 +109,7 @@ func main() {
 			CategoryService: categoryService,
 			ProductService:  productService,
 			OrderService:    orderService,
+			PhotoService:    photoService,
 		}
 	)
 	defer closeDB()

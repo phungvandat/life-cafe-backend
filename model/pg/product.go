@@ -11,18 +11,15 @@ import (
 // Product struct
 type Product struct {
 	Model
-	Name           string `json:"name,omitempty"`
-	MainPhoto      string `json:"mainPhoto,omitempty"`
-	FirstSubPhoto  string `json:"firstSubPhoto,omitempty"`
-	SecondSubPhoto string `json:"secondSubPhoto,omitempty"`
-	ThirdSubPhoto  string `json:"thirdSubPhoto,omitempty"`
-	Quantity       int    `json:"quantity,omitempty"`
-	Price          int    `json:"price,omitempty"`
-	Flag           int    `json:"flag,omitempty"`
-	Color          string `json:"color,omitempty"`
-	Slug           string `json:"slug,omitempty"`
-	Barcode        string `json:"barcode,omitempty"`
-	Description    string `json:"description,omitempty"`
+	Name        string `json:"name,omitempty"`
+	MainPhoto   string `json:"mainPhoto,omitempty"`
+	Quantity    int    `json:"quantity,omitempty"`
+	Price       int    `json:"price,omitempty"`
+	Flag        int    `json:"flag,omitempty"`
+	Color       string `json:"color,omitempty"`
+	Slug        string `json:"slug,omitempty"`
+	Barcode     string `json:"barcode,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 // BeforeCreate prepare data before create data

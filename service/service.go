@@ -4,6 +4,7 @@ import (
 	"github.com/phungvandat/life-cafe-backend/service/auth"
 	"github.com/phungvandat/life-cafe-backend/service/category"
 	"github.com/phungvandat/life-cafe-backend/service/order"
+	"github.com/phungvandat/life-cafe-backend/service/photo"
 	"github.com/phungvandat/life-cafe-backend/service/product"
 	"github.com/phungvandat/life-cafe-backend/service/upload"
 	"github.com/phungvandat/life-cafe-backend/service/user"
@@ -17,4 +18,5 @@ type Service struct {
 	CategoryService category.Service
 	ProductService  product.Service
 	OrderService    order.Service
+	PhotoService    photo.Service
 }

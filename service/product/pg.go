@@ -4,11 +4,14 @@ import (
 	"context"
 	"sync"
 
+	"github.com/go-kit/kit/log"
 	"github.com/jinzhu/gorm"
+
 	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 	categorySvc "github.com/phungvandat/life-cafe-backend/service/category"
+	photoSvc "github.com/phungvandat/life-cafe-backend/service/photo"
 	errors "github.com/phungvandat/life-cafe-backend/util/error"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
@@ -18,13 +21,15 @@ type pgService struct {
 	db          *gorm.DB
 	categorySvc categorySvc.Service
 	spRollback  helper.SagasService
+	photoSvc    photoSvc.Service
 }
 
 // NewPGService new pg service
-func NewPGService(db *gorm.DB, categorySvc categorySvc.Service, spRollback helper.SagasService) Service {
+func NewPGService(db *gorm.DB, categorySvc categorySvc.Service, photoSvc photoSvc.Service, spRollback helper.SagasService) Service {
 	return &pgService{
 		db:          db,
 		categorySvc: categorySvc,
+		photoSvc:    photoSvc,
 		spRollback:  spRollback,
 	}
 }
@@ -37,6 +42,26 @@ func (s *pgService) CommitTransaction(_ context.Context, transactionID string) e
 	return s.spRollback.CommitTransaction(transactionID)
 }
 
+func (s *pgService) rollbackTransactions(ctx context.Context, transactionIDs []string) {
+	var log log.Logger
+	for _, transactionID := range transactionIDs {
+		err := s.RollbackTransaction(ctx, transactionID)
+		if err != nil {
+			log.Log("Rollback transaction "+transactionID+" failure by error ", err)
+		}
+	}
+}
+
+func (s *pgService) commitTransactions(ctx context.Context, transactionIDs []string) {
+	var log log.Logger
+	for _, transactionID := range transactionIDs {
+		err := s.CommitTransaction(ctx, transactionID)
+		if err != nil {
+			log.Log("Commit transaction "+transactionID+" failure by error ", err)
+		}
+	}
+}
+
 func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreateProductRequest) (*responseModel.CreateProductResponse, error) {
 	tx := s.db.Begin()
 	transactionID := (pgModel.NewUUID()).String()
@@ -45,6 +70,8 @@ func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreatePr
 		TransactionID: &transactionID,
 		Product:       &responseModel.Product{},
 	}
+
+	arrOtherServiceTX := []string{}
 
 	product := &pgModel.Product{
 		Name:        req.Name,
@@ -91,38 +118,61 @@ func (s *pgService) CreateProduct(ctx context.Context, req requestModel.CreatePr
 	}
 	res.Product.Categories = categories
 
-	// product sub photos
-	subPhotos := []string{}
-	for index, subPhoto := range req.SubPhotos {
-		if index == 0 {
-			product.FirstSubPhoto = subPhoto
-		} else if index == 1 {
-			product.SecondSubPhoto = subPhoto
-		} else if index == 2 {
-			product.ThirdSubPhoto = subPhoto
-		}
-		subPhotos = append(subPhotos, subPhoto)
-	}
-	res.Product.SubPhotos = subPhotos
-
 	err = tx.Create(product).Error
 	if err != nil {
 		return res, err
 	}
 
+	// product sub photos
+	subPhotos := []*pgModel.Photo{}
+	wg := sync.WaitGroup{}
+	for _, subPhoto := range req.SubPhotos {
+		wg.Add(1)
+		go func(subPhoto requestModel.SubPhoto) {
+			defer wg.Done()
+			photoRes, errFunc := s.photoSvc.CreatePhoto(ctx, requestModel.CreatePhotoRequest{
+				URL:       subPhoto.URL,
+				PhotoID:   subPhoto.ID,
+				ProductID: (product.ID).String(),
+			})
+			if photoRes != nil && photoRes.TransactionID != nil {
+				arrOtherServiceTX = append(arrOtherServiceTX, *photoRes.TransactionID)
+			}
+			if errFunc != nil {
+				err = errFunc
+				return
+			}
+			subPhotos = append(subPhotos, &pgModel.Photo{
+				Model: pgModel.Model{
+					ID: photoRes.Photo.ID,
+				},
+				URL: photoRes.Photo.URL,
+			})
+		}(subPhoto)
+	}
+	wg.Wait()
+
+	if err != nil {
+		s.rollbackTransactions(ctx, arrOtherServiceTX)
+		return res, err
+	}
+
+	res.Product.SubPhotos = subPhotos
+
 	for _, categoryID := range req.CategoryIDs {
 		categoryIDUUID, _ := pgModel.UUIDFromString(categoryID)
-		category := &pgModel.ProductCategory{
+		productCategory := &pgModel.ProductCategory{
 			ProductID:  &product.ID,
 			CategoryID: &categoryIDUUID,
 		}
-		err = tx.Create(category).Error
+		err = tx.Create(productCategory).Error
 		if err != nil {
 			return res, err
 		}
 	}
 
-	res.Product.Product = s.removeProductSubPhotos(ctx, *product)
+	res.Product.Product = product
+	s.commitTransactions(ctx, arrOtherServiceTX)
 
 	return res, nil
 }
@@ -159,9 +209,13 @@ func (s *pgService) GetProduct(ctx context.Context, req requestModel.GetProductR
 	res.Product.Categories = categories
 
 	// Sub photos
-	subPhotos := s.getProductSubPhotos(ctx, *product)
+	subPhotos, err := s.getProductSubPhotos(ctx, *product)
+	if err != nil {
+		return res, err
+	}
+
 	res.Product.SubPhotos = subPhotos
-	res.Product.Product = s.removeProductSubPhotos(ctx, *product)
+	res.Product.Product = product
 
 	return res, nil
 }
@@ -191,9 +245,12 @@ func (s *pgService) GetProducts(ctx context.Context, req requestModel.GetProduct
 	wg := sync.WaitGroup{}
 	for _, product := range products {
 		productRes := &responseModel.Product{}
-		subPhotos := s.getProductSubPhotos(ctx, product)
+		subPhotos, err := s.getProductSubPhotos(ctx, product)
+		if err != nil {
+			return res, err
+		}
 		productRes.SubPhotos = subPhotos
-		productRes.Product = s.removeProductSubPhotos(ctx, product)
+		productRes.Product = &product
 
 		wg.Add(1)
 		go func(productID string) {
@@ -221,6 +278,8 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 		TransactionID: &transactionID,
 	}
 
+	arrOtherServiceTX := []string{}
+
 	productID, _ := pgModel.UUIDFromString(req.ParamProductID)
 
 	product := &pgModel.Product{
@@ -247,19 +306,109 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 	}
 
 	// product sub photos
+	subPhotos := []*pgModel.Photo{}
 	if len(req.SubPhotos) > 0 {
-		for index, subPhoto := range req.SubPhotos {
-			if index == 0 {
-				product.FirstSubPhoto = subPhoto
-			} else if index == 1 {
-				product.SecondSubPhoto = subPhoto
-			} else if index == 2 {
-				product.ThirdSubPhoto = subPhoto
+		prePhotos, err := s.photoSvc.GetPhotos(ctx, requestModel.GetPhotosRequest{
+			ProductID: (product.ID).String(),
+		})
+		if err != nil {
+			s.rollbackTransactions(ctx, arrOtherServiceTX)
+			return res, err
+		}
+		preArrIDs := []string{}
+		for _, item := range prePhotos.Photos {
+			preArrIDs = append(preArrIDs, (item.ID).String())
+		}
+
+		currentArrIDs := []string{}
+		for _, item := range req.SubPhotos {
+			currentArrIDs = append(currentArrIDs, item.ID)
+		}
+
+		sameIDs := helper.GetSameElementInArrays(preArrIDs, currentArrIDs)
+		deleteIDs := helper.DifferenceArray(preArrIDs, sameIDs)
+		createIDs := helper.DifferenceArray(currentArrIDs, sameIDs)
+
+		for _, item := range deleteIDs {
+			deletePhotoRes, err := s.photoSvc.RemovePhoto(ctx, requestModel.RemovePhotoRequest{
+				ProductID:    (product.ID).String(),
+				ParamPhotoID: item,
+			})
+			if deletePhotoRes != nil && deletePhotoRes.TransactionID != nil {
+				arrOtherServiceTX = append(arrOtherServiceTX, *deletePhotoRes.TransactionID)
+			}
+			if err != nil {
+				s.rollbackTransactions(ctx, arrOtherServiceTX)
+				return res, err
+			}
+		}
+
+		for _, item := range sameIDs {
+			photoRes, err := s.photoSvc.GetPhoto(ctx, requestModel.GetPhotoRequest{
+				ParamPhotoID: item,
+			})
+			if err != nil {
+				s.rollbackTransactions(ctx, arrOtherServiceTX)
+				return res, err
+			}
+			subPhotos = append(subPhotos, &pgModel.Photo{
+				Model: pgModel.Model{
+					ID: photoRes.Photo.ID,
+				},
+				URL: photoRes.Photo.URL,
+			})
+		}
+
+		for _, item := range createIDs {
+			var subPhoto requestModel.SubPhoto
+			for _, value := range req.SubPhotos {
+				if value.ID == item {
+					subPhoto = value
+					break
+				}
+			}
+			photoRes, err := s.photoSvc.CreatePhoto(ctx, requestModel.CreatePhotoRequest{
+				URL:       subPhoto.URL,
+				PhotoID:   subPhoto.ID,
+				ProductID: (product.ID).String(),
+			})
+			if photoRes != nil && photoRes.TransactionID != nil {
+				arrOtherServiceTX = append(arrOtherServiceTX, *photoRes.TransactionID)
+			}
+			if err != nil {
+				s.rollbackTransactions(ctx, arrOtherServiceTX)
+				return res, err
+			}
+			subPhotos = append(subPhotos, &pgModel.Photo{
+				Model: pgModel.Model{
+					ID: photoRes.Photo.ID,
+				},
+				URL: photoRes.Photo.URL,
+			})
+		}
+	} else {
+		subPhotos, err = s.getProductSubPhotos(ctx, *product)
+		if err != nil {
+			s.rollbackTransactions(ctx, arrOtherServiceTX)
+			return res, err
+		}
+
+		for _, item := range subPhotos {
+			deletePhotoRes, err := s.photoSvc.RemovePhoto(ctx, requestModel.RemovePhotoRequest{
+				ProductID:    (product.ID).String(),
+				ParamPhotoID: (item.ID).String(),
+			})
+			if deletePhotoRes != nil && deletePhotoRes.TransactionID != nil {
+				arrOtherServiceTX = append(arrOtherServiceTX, *deletePhotoRes.TransactionID)
+			}
+			if err != nil {
+				s.rollbackTransactions(ctx, arrOtherServiceTX)
+				return res, err
 			}
 		}
 	}
 
-	if req.Price >= 0 && req.Price != product.Price {
+	if req.Price > 0 && req.Price != product.Price {
 		product.Price = req.Price
 	}
 
@@ -275,6 +424,7 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 		err := s.db.Find(slugProduct, slugProduct).Error
 
 		if err == nil {
+			s.rollbackTransactions(ctx, arrOtherServiceTX)
 			return res, errors.ProductSlugExistError
 		}
 		product.Slug = req.Slug
@@ -301,6 +451,7 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 	err = s.db.Model(&pgModel.ProductCategory{}).Where("product_id = ?", product.ID).Select("category_id").Scan(&preCategoryIDsStruct).Error
 
 	if err != nil {
+		s.rollbackTransactions(ctx, arrOtherServiceTX)
 		return res, err
 	}
 
@@ -320,6 +471,7 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 			}
 			err = tx.Unscoped().Where(deleteQuery).Delete(&pgModel.ProductCategory{}).Error
 			if err != nil {
+				s.rollbackTransactions(ctx, arrOtherServiceTX)
 				return res, err
 			}
 		}
@@ -333,6 +485,7 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 				}
 				err = tx.Create(productcategory).Error
 				if err != nil {
+					s.rollbackTransactions(ctx, arrOtherServiceTX)
 					return res, err
 				}
 			}
@@ -345,19 +498,21 @@ func (s *pgService) UpdateProduct(ctx context.Context, req requestModel.UpdatePr
 	err = tx.Save(product).Error
 
 	if err != nil {
+		s.rollbackTransactions(ctx, arrOtherServiceTX)
 		return res, err
 	}
 
 	categories, err := s.getCategoriesByIDs(ctx, categoryIDs)
 
 	if err != nil {
+		s.rollbackTransactions(ctx, arrOtherServiceTX)
 		return res, err
 	}
 
 	res.Product.Categories = categories
-	subPhotos := s.getProductSubPhotos(ctx, *product)
 	res.Product.SubPhotos = subPhotos
-	res.Product.Product = s.removeProductSubPhotos(ctx, *product)
+	res.Product.Product = product
+	s.commitTransactions(ctx, arrOtherServiceTX)
 
 	return res, nil
 }
@@ -435,27 +590,25 @@ func (s *pgService) getProductcategogyStringIDArray(ctx context.Context, product
 	return stringIDArray
 }
 
-func (s *pgService) getProductSubPhotos(ctx context.Context, product pgModel.Product) []string {
-	subPhotos := []string{}
+func (s *pgService) getProductSubPhotos(ctx context.Context, product pgModel.Product) ([]*pgModel.Photo, error) {
+	subPhotos := []*pgModel.Photo{}
 
-	if product.FirstSubPhoto != "" {
-		subPhotos = append(subPhotos, product.FirstSubPhoto)
+	getPhotoRes, err := s.photoSvc.GetPhotos(ctx, requestModel.GetPhotosRequest{
+		ProductID: (product.ID).String(),
+	})
+
+	if err != nil {
+		return subPhotos, err
 	}
 
-	if product.SecondSubPhoto != "" {
-		subPhotos = append(subPhotos, product.SecondSubPhoto)
+	for _, item := range getPhotoRes.Photos {
+		subPhotos = append(subPhotos, &pgModel.Photo{
+			Model: pgModel.Model{
+				ID: item.ID,
+			},
+			URL: item.URL,
+		})
 	}
 
-	if product.ThirdSubPhoto != "" {
-		subPhotos = append(subPhotos, product.ThirdSubPhoto)
-	}
-
-	return subPhotos
-}
-
-func (s *pgService) removeProductSubPhotos(ctx context.Context, product pgModel.Product) *pgModel.Product {
-	product.FirstSubPhoto = ""
-	product.SecondSubPhoto = ""
-	product.ThirdSubPhoto = ""
-	return &product
+	return subPhotos, nil
 }

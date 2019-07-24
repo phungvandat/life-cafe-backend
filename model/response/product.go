@@ -13,7 +13,7 @@ type CreateProductResponse struct {
 // Product struct
 type Product struct {
 	*pgModel.Product
-	SubPhotos  []string            `json:"subPhotos"`
+	SubPhotos  []*pgModel.Photo    `json:"subPhotos"`
 	Categories []*pgModel.Category `json:"categories"`
 }
 
