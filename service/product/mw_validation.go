@@ -79,6 +79,15 @@ func (mw validationMiddleware) CreateProduct(ctx context.Context, req requestMod
 		return nil, errors.InvalidSecondaryPhotoQuantityError
 	}
 
+	for _, photo := range req.SubPhotos {
+		if photo.URL == "" {
+			return nil, errors.InvalidPhotoURLError
+		}
+		if _, err := pgModel.UUIDFromString(photo.ID); photo.ID != "" && err != nil {
+			return nil, errors.InvalidPhotoIDError
+		}
+	}
+
 	return mw.Service.CreateProduct(ctx, req)
 }
 
@@ -137,6 +146,15 @@ func (mw validationMiddleware) UpdateProduct(ctx context.Context, req requestMod
 
 	if len(req.SubPhotos) > 3 {
 		return nil, errors.InvalidSecondaryPhotoQuantityError
+	}
+
+	for _, photo := range req.SubPhotos {
+		if photo.URL == "" {
+			return nil, errors.InvalidPhotoURLError
+		}
+		if _, err := pgModel.UUIDFromString(photo.ID); photo.ID != "" && err != nil {
+			return nil, errors.InvalidPhotoIDError
+		}
 	}
 
 	if req.Quantity != nil {
