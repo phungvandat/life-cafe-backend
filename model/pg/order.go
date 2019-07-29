@@ -28,10 +28,10 @@ func (u *Order) BeforeCreate(scope *gorm.Scope) error {
 // ProductOrder struct
 type ProductOrder struct {
 	Model
-	ProductID     *UUID `json:"productIDd,omitempty"`
-	OrderID       *UUID `json:"orderIDd,omitempty"`
-	OrderQuantity int   `json:"orderQuantity,omitempty"`
-	RealPrice     int   `json:"realPrice,omitempty"`
+	ProductID      *UUID `json:"productIDd,omitempty"`
+	OrderID        *UUID `json:"orderIDd,omitempty"`
+	OrderQuantity  int   `json:"orderQuantity,omitempty"`
+	OrderRealPrice int   `json:"orderRealPrice,omitempty"`
 }
 
 // BeforeCreate prepare data before create data

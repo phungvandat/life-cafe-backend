@@ -20,9 +20,9 @@ type CreateOrderRequest struct {
 
 // ProductOrder struct
 type ProductOrder struct {
-	ProductID     string `json:"productID,omitempty"`
-	OrderQuantity int    `json:"orderQuantity,omitempty"`
-	RealPrice     int    `json:"realPrice,omitempty"`
+	ProductID      string `json:"productID,omitempty"`
+	OrderQuantity  int    `json:"orderQuantity,omitempty"`
+	OrderRealPrice int    `json:"orderRealPrice,omitempty"`
 }
 
 // GetOrderRequest struct

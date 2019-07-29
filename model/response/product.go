@@ -25,6 +25,7 @@ type GetProductResponse struct {
 // GetProductsResponse struct
 type GetProductsResponse struct {
 	Products []*Product `json:"products"`
+	Total    int        `json:"total,omitempty"`
 }
 
 // UpdateProductResponse struct

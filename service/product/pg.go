@@ -233,38 +233,63 @@ func (s *pgService) GetProducts(ctx context.Context, req requestModel.GetProduct
 	}
 
 	products := []pgModel.Product{}
+	var total int
 
-	err := s.db.Limit(limit).Offset(skip).Find(&products).Error
+	var err error
+
+	findProductWG := sync.WaitGroup{}
+
+	findProductWG.Add(1)
+	go func() {
+		defer findProductWG.Done()
+		errFunc := s.db.Limit(limit).Offset(skip).Order("created_at desc").Find(&products).Error
+		if errFunc != nil {
+			err = errFunc
+		}
+	}()
+
+	findProductWG.Add(1)
+	go func() {
+		defer findProductWG.Done()
+		errFunc := s.db.Table("products").Count(&total).Error
+		if errFunc != nil {
+			err = errFunc
+		}
+	}()
+
+	findProductWG.Wait()
 
 	if err != nil {
 		return res, err
 	}
 
-	productsRes := []*responseModel.Product{}
+	productsRes := make([]*responseModel.Product, len(products))
 
 	wg := sync.WaitGroup{}
-	for _, product := range products {
-		productRes := &responseModel.Product{}
-		subPhotos, err := s.getProductSubPhotos(ctx, product)
-		if err != nil {
-			return res, err
-		}
-		productRes.SubPhotos = subPhotos
-		productRes.Product = &product
-
+	for idx, product := range products {
 		wg.Add(1)
-		go func(productID string) {
+		go func(product pgModel.Product, idx int) {
 			defer wg.Done()
+			productRes := &responseModel.Product{}
+			subPhotos, errFunc := s.getProductSubPhotos(ctx, product)
+			if errFunc != nil {
+				err = errFunc
+				return
+			}
+			productRes.SubPhotos = subPhotos
+			productRes.Product = &product
+			productID := (product.ID).String()
 			categories, err := s.getCategoriesForProduct(ctx, productID)
 			if err == nil {
 				productRes.Categories = categories
 			}
-			productsRes = append(productsRes, productRes)
-		}((product.ID).String())
+			productsRes[idx] = productRes
+		}(product, idx)
 	}
 	wg.Wait()
 
 	res.Products = productsRes
+	res.Total = total
 	return res, nil
 }
 

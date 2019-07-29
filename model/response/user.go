@@ -20,3 +20,8 @@ type UserLogInResponse struct {
 type GetUserResponse struct {
 	User *pgModel.User `json:"user,omitempty"`
 }
+
+// GetUsersResponse struct
+type GetUsersResponse struct {
+	Users []*pgModel.User `json:"users"`
+}

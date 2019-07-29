@@ -6,7 +6,7 @@ CREATE TABLE "public"."product_categories"(
 	"updated_at" timestamptz,
   	"deleted_at" timestamptz,
 	"product_id" uuid references products,
-	"category_id" uuid references categories,
+	"category_id" uuid,
  	CONSTRAINT "product_categories_pkey" PRIMARY KEY ("id"),
 	UNIQUE("product_id","category_id")
 )

@@ -22,3 +22,12 @@ type UserLogInRequest struct {
 type GetUserRequest struct {
 	ParamUserID string `json:"userID,omitempty"`
 }
+
+// GetUsersRequest struct
+type GetUsersRequest struct {
+	Fullname    string `json:"fullname,omitempty"`
+	PhoneNumber string `json:"phoneNumber,omitempty"`
+	AlwaysPhone string `json:"alwaysPhone,omitempty"`
+	Skip        string `json:"skip,omitempty"`
+	Limit       string `json:"limit,omitempty"`
+}

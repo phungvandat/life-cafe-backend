@@ -13,7 +13,7 @@ type Product struct {
 	Model
 	Name        string `json:"name,omitempty"`
 	MainPhoto   string `json:"mainPhoto,omitempty"`
-	Quantity    int    `json:"quantity,omitempty"`
+	Quantity    int    `json:"quantity"`
 	Price       int    `json:"price,omitempty"`
 	Flag        int    `json:"flag,omitempty"`
 	Color       string `json:"color,omitempty"`

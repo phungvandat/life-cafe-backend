@@ -153,3 +153,55 @@ func (s *pgService) GetUser(ctx context.Context, req requestModel.GetUserRequest
 
 	return res, nil
 }
+
+func (s *pgService) GetUsers(ctx context.Context, req requestModel.GetUsersRequest) (*responseModel.GetUsersResponse, error) {
+	res := &responseModel.GetUsersResponse{}
+
+	skip := req.Skip
+	limit := req.Limit
+	if req.Skip == "" {
+		skip = "-1"
+	}
+
+	if req.Limit == "" {
+		limit = "-1"
+	}
+
+	stringQuery := ""
+	if req.Fullname != "" {
+		query := "fullname = '" + req.Fullname + "'"
+		if stringQuery == "" {
+			stringQuery += query
+		} else {
+			stringQuery += " AND " + query
+		}
+	}
+
+	if req.AlwaysPhone == "true" {
+		query := "phone_number = '" + req.PhoneNumber + "'"
+		if stringQuery == "" {
+			stringQuery += query
+		} else {
+			stringQuery += " AND " + query
+		}
+	} else if req.PhoneNumber != "" {
+		query := "phone_number = '" + req.PhoneNumber + "'"
+		if stringQuery == "" {
+			stringQuery += query
+		} else {
+			stringQuery += " AND " + query
+		}
+	}
+
+	users := []*pgModel.User{}
+
+	err := s.db.Limit(limit).Offset(skip).Where(stringQuery).Table("users").Scan(&users).Error
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Users = users
+
+	return res, nil
+}

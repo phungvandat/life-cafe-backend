@@ -128,6 +128,7 @@ func (s *pgService) GetCategories(ctx context.Context, req requestModel.GetCateg
 	}
 
 	err := s.db.Limit(limit).Offset(skip).Table("categories").
+		Order("created_at desc").
 		Where(query).
 		Scan(&arrCategory).Error
 
