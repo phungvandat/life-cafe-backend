@@ -48,3 +48,32 @@ func MakeLogInEndpoint(s service.Service) endpoint.Endpoint {
 		return res, nil
 	}
 }
+
+// MakeGetUsersEndpoint func
+func MakeGetUsersEndpoint(s service.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(requesetModel.GetUsersRequest)
+		res, err := s.UserService.GetUsers(ctx, req)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return res, nil
+	}
+}
+
+// MakeGetUserEndpoint func
+func MakeGetUserEndpoint(s service.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(requesetModel.GetUserRequest)
+
+		res, err := s.UserService.GetUser(ctx, req)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return res, nil
+	}
+}

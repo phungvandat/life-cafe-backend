@@ -15,4 +15,5 @@ type Service interface {
 	LogIn(context.Context, requestModel.UserLogInRequest) (*responseModel.UserLogInResponse, error)
 	CreateMaster(context.Context) error
 	GetUser(context.Context, requestModel.GetUserRequest) (*responseModel.GetUserResponse, error)
+	GetUsers(context.Context, requestModel.GetUsersRequest) (*responseModel.GetUsersResponse, error)
 }

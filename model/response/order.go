@@ -21,9 +21,9 @@ type Order struct {
 
 // OrderProductInfo struct
 type OrderProductInfo struct {
-	OrderQuantity int              `json:"orderQuantity,omitempty"`
-	RealPrice     int              `json:"realPrice,omitempty"`
-	Product       *pgModel.Product `json:"product,omitempty"`
+	OrderQuantity  int              `json:"orderQuantity,omitempty"`
+	OrderRealPrice int              `json:"orderRealPrice,omitempty"`
+	Product        *pgModel.Product `json:"product,omitempty"`
 }
 
 // GetOrderResponse struct
@@ -34,6 +34,7 @@ type GetOrderResponse struct {
 // GetOrdersResponse struct
 type GetOrdersResponse struct {
 	Orders []*Order `json:"orders"`
+	Total  int      `json:"total,omitempty"`
 }
 
 // UpdateOrderResponse struct

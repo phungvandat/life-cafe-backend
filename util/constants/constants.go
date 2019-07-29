@@ -4,6 +4,7 @@ package constants
 var UserRole = map[string]string{
 	"master": "master",
 	"admin":  "admin",
+	"user":   "user",
 }
 
 // OrderType val

@@ -6,25 +6,25 @@ import (
 
 //Error Declaration
 var (
-	OrderTypeIsRequiredError           = orderTypeIsRequiredError{}
-	InvalidOrderTypeError              = invalidOrderTypeError{}
-	OrderStatusIsRequiredError         = orderStatusIsRequiredError{}
-	InvalidOrderStatusError            = invalidOrderStatusError{}
-	OrderProductInfoIsRequiredError    = orderProductInfoIsRequiredError{}
-	InvalidOrderProductQuantityError   = invalidOrderProductQuantityError{}
-	InvalidCustomerIDError             = invalidCustomerIDError{}
-	ReceiverPhoneNumberIsRequiredError = receiverPhoneNumberIsRequiredError{}
-	ReceiverAddressIsRequiredError     = receiverAddressIsRequiredError{}
-	ReceiverFullnameIsRequiredError    = receiverFullnameIsRequiredError{}
-	InvalidReceiverPhoneNumberError    = invalidReceiverPhoneNumberError{}
-	InvalidOrderProductRealPriceError  = invalidOrderProductRealPriceError{}
-	CustomerPhoneNumberIsReqiredError  = customerPhoneNumberIsReqiredError{}
-	InvalidCustomerPhoneNumberError    = invalidCustomerPhoneNumberError{}
-	CustomerAddressIsRequiredError     = customerAddressIsRequiredError{}
-	CustomerFullnameIsRequiredError    = customerFullnameIsRequiredError{}
-	CustomerNotExistError              = customerNotExistError{}
-	OrderNotExistError                 = orderNotExistError{}
-	CannotUpdateOrderError             = cannotUpdateOrderError{}
+	OrderTypeIsRequiredError               = orderTypeIsRequiredError{}
+	InvalidOrderTypeError                  = invalidOrderTypeError{}
+	OrderStatusIsRequiredError             = orderStatusIsRequiredError{}
+	InvalidOrderStatusError                = invalidOrderStatusError{}
+	OrderProductInfoIsRequiredError        = orderProductInfoIsRequiredError{}
+	InvalidOrderProductQuantityError       = invalidOrderProductQuantityError{}
+	InvalidCustomerIDError                 = invalidCustomerIDError{}
+	ReceiverPhoneNumberIsRequiredError     = receiverPhoneNumberIsRequiredError{}
+	ReceiverAddressIsRequiredError         = receiverAddressIsRequiredError{}
+	ReceiverFullnameIsRequiredError        = receiverFullnameIsRequiredError{}
+	InvalidReceiverPhoneNumberError        = invalidReceiverPhoneNumberError{}
+	InvalidOrderProductOrderRealPriceError = invalidOrderProductOrderRealPriceError{}
+	CustomerPhoneNumberIsReqiredError      = customerPhoneNumberIsReqiredError{}
+	InvalidCustomerPhoneNumberError        = invalidCustomerPhoneNumberError{}
+	CustomerAddressIsRequiredError         = customerAddressIsRequiredError{}
+	CustomerFullnameIsRequiredError        = customerFullnameIsRequiredError{}
+	CustomerNotExistError                  = customerNotExistError{}
+	OrderNotExistError                     = orderNotExistError{}
+	CannotUpdateOrderError                 = cannotUpdateOrderError{}
 )
 
 //
@@ -149,13 +149,13 @@ func (invalidReceiverPhoneNumberError) StatusCode() int {
 }
 
 //
-type invalidOrderProductRealPriceError struct{}
+type invalidOrderProductOrderRealPriceError struct{}
 
-func (invalidOrderProductRealPriceError) Error() string {
-	return "Invalid order product real price"
+func (invalidOrderProductOrderRealPriceError) Error() string {
+	return "Invalid order product order real price"
 }
 
-func (invalidOrderProductRealPriceError) StatusCode() int {
+func (invalidOrderProductOrderRealPriceError) StatusCode() int {
 	return http.StatusBadRequest
 }
 

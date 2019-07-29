@@ -12,7 +12,7 @@ type CreatePhotoResponse struct {
 
 // GetPhotosResponse struct
 type GetPhotosResponse struct {
-	Photos []*pgModel.Photo `json:"photos,omitempty"`
+	Photos []*pgModel.Photo `json:"photos"`
 }
 
 // RemovePhotoResponse struct

@@ -29,5 +29,19 @@ func UserRoute(endpoints endpoints.Endpoints,
 			encode.EncodeResponse,
 			options...,
 		).ServeHTTP)
+		// Get users
+		r.Get("/", httptransport.NewServer(
+			middlewares.AuthMiddleware.AuthAdmin((endpoints.UserEndpoint.GetUsers)),
+			userDecode.GetUsersRequest,
+			encode.EncodeResponse,
+			options...,
+		).ServeHTTP)
+		// Get user
+		r.Get("/{userID}", httptransport.NewServer(
+			middlewares.AuthMiddleware.AuthUser(endpoints.UserEndpoint.GetUser),
+			userDecode.GetUserRequest,
+			encode.EncodeResponse,
+			options...,
+		).ServeHTTP)
 	}
 }

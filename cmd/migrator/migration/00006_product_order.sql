@@ -5,10 +5,10 @@ CREATE TABLE "public"."product_orders"(
 	"created_at" timestamptz DEFAULT now(),
 	"updated_at" timestamptz,
   	"deleted_at" timestamptz,
-	"product_id" uuid references products,
+	"product_id" uuid,
 	"order_id" uuid references orders,
 	"order_quantity" int,
-	"real_price" int default 0,
+	"order_real_price" int default 0,
  	CONSTRAINT "product_orders_pkey" PRIMARY KEY ("id"),
 	UNIQUE("product_id","order_id")
 )

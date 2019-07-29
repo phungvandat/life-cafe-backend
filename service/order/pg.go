@@ -80,7 +80,6 @@ func (s *pgService) CreateOrder(ctx context.Context, req requestModel.CreateOrde
 	}
 	signUserID, _ := pgModel.UUIDFromString(ctxUserID)
 
-	customer := &pgModel.User{}
 	var err error
 	order := &pgModel.Order{
 		Type:                req.Type,
@@ -95,41 +94,45 @@ func (s *pgService) CreateOrder(ctx context.Context, req requestModel.CreateOrde
 	if order.Status == "done" {
 		order.ImplementerID = &signUserID
 	}
+
+	var customer *pgModel.User
 	// Get order customer
-	if req.CustomerID == "" {
-		createCustomerReq := requestModel.CreateUserRequest{
-			Username:    req.CustomerPhoneNumber,
-			PhoneNumber: req.CustomerPhoneNumber,
-			Fullname:    req.CustomerFullname,
-			Address:     req.CustomerAddress,
+	if req.Type != "import" {
+		if req.CustomerID == "" {
+			createCustomerReq := requestModel.CreateUserRequest{
+				Username:    req.CustomerPhoneNumber,
+				PhoneNumber: req.CustomerPhoneNumber,
+				Fullname:    req.CustomerFullname,
+				Address:     req.CustomerAddress,
+				Role:        "user",
+			}
+
+			customerRes, err := s.userSvc.Create(ctx, createCustomerReq)
+			if customerRes != nil && customerRes.TransactionID != nil {
+				arrOtherServiceTX = append(arrOtherServiceTX, *customerRes.TransactionID)
+			}
+
+			if err != nil {
+				s.rollbackTransactions(ctx, arrOtherServiceTX)
+				return res, err
+			}
+			customer = customerRes.User
+		} else {
+			getCustomerReq := requestModel.GetUserRequest{
+				ParamUserID: req.CustomerID,
+			}
+
+			customerRes, err := s.userSvc.GetUser(ctx, getCustomerReq)
+			if err != nil {
+				s.rollbackTransactions(ctx, arrOtherServiceTX)
+				return res, err
+			}
+
+			customer = customerRes.User
 		}
 
-		customerRes, err := s.userSvc.Create(ctx, createCustomerReq)
-		if customerRes != nil && customerRes.TransactionID != nil {
-			arrOtherServiceTX = append(arrOtherServiceTX, *customerRes.TransactionID)
-		}
-
-		if err != nil {
-			s.rollbackTransactions(ctx, arrOtherServiceTX)
-			return res, err
-		}
-		customer = customerRes.User
-	} else {
-		getCustomerReq := requestModel.GetUserRequest{
-			ParamUserID: req.CustomerID,
-		}
-
-		customerRes, err := s.userSvc.GetUser(ctx, getCustomerReq)
-		if err != nil {
-			s.rollbackTransactions(ctx, arrOtherServiceTX)
-			return res, err
-		}
-
-		customer = customerRes.User
+		order.CustomerID = &customer.ID
 	}
-
-	order.CustomerID = &customer.ID
-
 	err = tx.Create(order).Error
 
 	if err != nil {
@@ -164,10 +167,10 @@ func (s *pgService) CreateOrder(ctx context.Context, req requestModel.CreateOrde
 			}
 
 			productOrder := &pgModel.ProductOrder{
-				ProductID:     &product.ID,
-				OrderID:       &order.ID,
-				OrderQuantity: productInfo.OrderQuantity,
-				RealPrice:     productInfo.RealPrice,
+				ProductID:      &product.ID,
+				OrderID:        &order.ID,
+				OrderQuantity:  productInfo.OrderQuantity,
+				OrderRealPrice: productInfo.OrderRealPrice,
 			}
 
 			funcErr = tx.Create(productOrder).Error
@@ -188,8 +191,8 @@ func (s *pgService) CreateOrder(ctx context.Context, req requestModel.CreateOrde
 				return
 			}
 			orderProductInfo = append(orderProductInfo, &responseModel.OrderProductInfo{
-				OrderQuantity: productOrder.OrderQuantity,
-				RealPrice:     productOrder.RealPrice,
+				OrderQuantity:  productOrder.OrderQuantity,
+				OrderRealPrice: productOrder.OrderRealPrice,
 				Product: &pgModel.Product{
 					Model: pgModel.Model{
 						ID: product.ID,
@@ -208,13 +211,15 @@ func (s *pgService) CreateOrder(ctx context.Context, req requestModel.CreateOrde
 	}
 
 	res.Order.Order = order
-	res.Order.Customer = &pgModel.User{
-		Model: pgModel.Model{
-			ID: customer.ID,
-		},
-		Fullname:    customer.Fullname,
-		Address:     customer.Address,
-		PhoneNumber: customer.PhoneNumber,
+	if customer != nil {
+		res.Order.Customer = &pgModel.User{
+			Model: pgModel.Model{
+				ID: customer.ID,
+			},
+			Fullname:    customer.Fullname,
+			Address:     customer.Address,
+			PhoneNumber: customer.PhoneNumber,
+		}
 	}
 	res.Order.OrderProductInfo = orderProductInfo
 	s.commitTransactions(ctx, arrOtherServiceTX)
@@ -249,7 +254,7 @@ func (s *pgService) GetOrder(ctx context.Context, req requestModel.GetOrderReque
 
 	userSiginRole := ctx.Value(contextkey.UserRoleContextKey).(string)
 
-	if userSiginRole != "amdin" && userSiginRole != "master" && ctxUserID != (order.CustomerID).String() && ctxUserID != (order.CreatorID).String() && order.ImplementerID != nil && (order.ImplementerID).String() != ctxUserID {
+	if userSiginRole != "amdin" && userSiginRole != "master" && order.CustomerID != nil && ctxUserID != (order.CustomerID).String() && ctxUserID != (order.CreatorID).String() && order.ImplementerID != nil && (order.ImplementerID).String() != ctxUserID {
 		return res, errors.PermissionDeniedError
 	}
 
@@ -278,22 +283,44 @@ func (s *pgService) GetOrders(ctx context.Context, req requestModel.GetOrdersReq
 		limit = "-1"
 	}
 
+	var total int
+	var err error
 	orders := []pgModel.Order{}
 
-	err := s.db.Offset(skip).Limit(limit).Find(&orders).Error
+	findOrdersWG := sync.WaitGroup{}
+
+	findOrdersWG.Add(1)
+	go func() {
+		defer findOrdersWG.Done()
+		errFunc := s.db.Offset(skip).Limit(limit).Order("created_at desc").Find(&orders).Error
+		if errFunc != nil {
+			err = errFunc
+		}
+	}()
+
+	findOrdersWG.Add(1)
+	go func() {
+		defer findOrdersWG.Done()
+		errFunc := s.db.Table("orders").Count(&total).Error
+		if errFunc != nil {
+			err = errFunc
+		}
+	}()
+
+	findOrdersWG.Wait()
 
 	if err != nil {
 		return res, err
 	}
 
-	orderArr := []*responseModel.Order{}
+	orderArr := make([]*responseModel.Order, len(orders))
 
 	// Get order detail
 	wg := sync.WaitGroup{}
 
-	for _, order := range orders {
+	for idx, order := range orders {
 		wg.Add(1)
-		go func(order pgModel.Order) {
+		go func(order pgModel.Order, idx int) {
 			defer wg.Done()
 			orderRes, errFunc := s.getOrderDetail(ctx, order, true)
 
@@ -301,8 +328,8 @@ func (s *pgService) GetOrders(ctx context.Context, req requestModel.GetOrdersReq
 				err = errFunc
 				return
 			}
-			orderArr = append(orderArr, orderRes)
-		}(order)
+			orderArr[idx] = orderRes
+		}(order, idx)
 	}
 
 	wg.Wait()
@@ -312,6 +339,7 @@ func (s *pgService) GetOrders(ctx context.Context, req requestModel.GetOrdersReq
 	}
 
 	res.Orders = orderArr
+	res.Total = total
 
 	return res, nil
 }
@@ -327,6 +355,8 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 	arrOtherServiceTX := []string{}
 
 	orderIDUUID, _ := pgModel.UUIDFromString(req.ParamOrderID)
+	orderProductInfo := []*responseModel.OrderProductInfo{}
+	wg := sync.WaitGroup{}
 
 	order := &pgModel.Order{
 		Model: pgModel.Model{
@@ -344,14 +374,27 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 		return res, err
 	}
 
-	if order.Status == "delivering" || order.Status == "done" {
+	if (order.Status == "delivering" && req.Status != "done") || order.Status == "done" {
 		s.rollbackTransactions(ctx, arrOtherServiceTX)
 		return res, errors.CannotUpdateOrderError
 	}
 
-	wg := sync.WaitGroup{}
+	if req.Note != "" && req.Note != order.Note {
+		order.Note = req.Note
+	}
 
-	orderProductInfo := []*responseModel.OrderProductInfo{}
+	if req.Status != "" && req.Status != order.Status {
+		preStatus := order.Status
+		order.Status = req.Status
+		if req.Status == "done" {
+			ctxUserID := ctx.Value(contextkey.UserIDContextKey).(string)
+			implementerID, _ := pgModel.UUIDFromString(ctxUserID)
+			order.ImplementerID = &implementerID
+		}
+		if preStatus == "delivering" {
+			goto Update
+		}
+	}
 
 	if len(req.OrderProductInfo) > 0 {
 		preProductOrders := []pgModel.ProductOrder{}
@@ -442,10 +485,10 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 				for _, productInfo := range req.OrderProductInfo {
 					if productInfo.ProductID == productID {
 						createOrderProduct = &pgModel.ProductOrder{
-							ProductID:     &productIDUUID,
-							OrderID:       &order.ID,
-							OrderQuantity: productInfo.OrderQuantity,
-							RealPrice:     productInfo.RealPrice,
+							ProductID:      &productIDUUID,
+							OrderID:        &order.ID,
+							OrderQuantity:  productInfo.OrderQuantity,
+							OrderRealPrice: productInfo.OrderRealPrice,
 						}
 						break
 					}
@@ -498,8 +541,8 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 						MainPhoto: product.MainPhoto,
 						Quantity:  product.Quantity,
 					},
-					OrderQuantity: createOrderProduct.OrderQuantity,
-					RealPrice:     createOrderProduct.RealPrice,
+					OrderQuantity:  createOrderProduct.OrderQuantity,
+					OrderRealPrice: createOrderProduct.OrderRealPrice,
 				})
 			}(productID)
 		}
@@ -523,7 +566,7 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 			}
 
 			for _, value := range req.OrderProductInfo {
-				if item == value.ProductID && (value.OrderQuantity != pre.OrderQuantity || value.RealPrice != pre.RealPrice) {
+				if item == value.ProductID && (value.OrderQuantity != pre.OrderQuantity || value.OrderRealPrice != pre.OrderRealPrice) {
 					update = &value
 					break
 				}
@@ -577,8 +620,8 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 						MainPhoto: product.MainPhoto,
 						Quantity:  product.Quantity,
 					},
-					OrderQuantity: productOrder.OrderQuantity,
-					RealPrice:     productOrder.RealPrice,
+					OrderQuantity:  productOrder.OrderQuantity,
+					OrderRealPrice: productOrder.OrderRealPrice,
 				})
 			}(item)
 		}
@@ -589,7 +632,7 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 				defer wg.Done()
 				updateRecord := updateProductOrder.pre
 				updateRecord.OrderQuantity = updateProductOrder.update.OrderQuantity
-				updateRecord.RealPrice = updateProductOrder.update.RealPrice
+				updateRecord.OrderRealPrice = updateProductOrder.update.OrderRealPrice
 				errFunc := tx.Save(updateRecord).Error
 				if errFunc != nil {
 					err = errFunc
@@ -623,7 +666,7 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 						}
 						updateRecord := updateProductOrder.pre
 						updateRecord.OrderQuantity = updateProductOrder.update.OrderQuantity
-						updateRecord.RealPrice = updateProductOrder.update.RealPrice
+						updateRecord.OrderRealPrice = updateProductOrder.update.OrderRealPrice
 
 						errFunc = tx.Save(updateRecord).Error
 						if errFunc != nil {
@@ -653,8 +696,8 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 						MainPhoto: product.MainPhoto,
 						Quantity:  product.Quantity,
 					},
-					OrderQuantity: updateRecord.OrderQuantity,
-					RealPrice:     updateRecord.RealPrice,
+					OrderQuantity:  updateRecord.OrderQuantity,
+					OrderRealPrice: updateRecord.OrderRealPrice,
 				})
 			}(item)
 		}
@@ -664,19 +707,6 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 		if err != nil {
 			s.rollbackTransactions(ctx, arrOtherServiceTX)
 			return res, err
-		}
-	}
-
-	if req.Note != "" && req.Note != order.Note {
-		order.Note = req.Note
-	}
-
-	if req.Status != "" && req.Status != order.Status {
-		order.Status = req.Status
-		if req.Status == "done" {
-			ctxUserID := ctx.Value(contextkey.UserIDContextKey).(string)
-			implementerID, _ := pgModel.UUIDFromString(ctxUserID)
-			order.ImplementerID = &implementerID
 		}
 	}
 
@@ -691,7 +721,7 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 	if req.ReceiverFullname != "" && req.ReceiverFullname != order.ReceiverFullname {
 		order.ReceiverFullname = req.ReceiverFullname
 	}
-
+Update:
 	err = tx.Save(order).Error
 
 	if err != nil {
@@ -708,7 +738,6 @@ func (s *pgService) UpdateOrder(ctx context.Context, req requestModel.UpdateOrde
 	}
 
 	res.Order = orderRes
-	res.Order.OrderProductInfo = orderProductInfo
 
 	if order.ImplementerID != nil {
 		implementer := &pgModel.User{
@@ -734,33 +763,37 @@ func (s *pgService) getOrderDetail(ctx context.Context, order pgModel.Order, isG
 
 	var err error
 
-	var customer *pgModel.User
-	getCustomerReq := requestModel.GetUserRequest{
-		ParamUserID: (order.CustomerID).String(),
-	}
-
 	var creator *pgModel.User
 	getCreatorReq := requestModel.GetUserRequest{
 		ParamUserID: (order.CreatorID).String(),
 	}
 
-	var implementer *pgModel.User
+	var (
+		implementer *pgModel.User
+		customer    *pgModel.User
+	)
 
 	orderProductInfo := []*responseModel.OrderProductInfo{}
 
 	wg := sync.WaitGroup{}
 
 	// Get customer
-	wg.Add(1)
-	go func(getCustomerReq requestModel.GetUserRequest) {
-		defer wg.Done()
-		customerRes, errFunc := s.userSvc.GetUser(ctx, getCustomerReq)
-		if errFunc != nil {
-			err = errFunc
-			return
+	if order.Type != "import" {
+		getCustomerReq := requestModel.GetUserRequest{
+			ParamUserID: (order.CustomerID).String(),
 		}
-		customer = customerRes.User
-	}(getCustomerReq)
+
+		wg.Add(1)
+		go func(getCustomerReq requestModel.GetUserRequest) {
+			defer wg.Done()
+			customerRes, errFunc := s.userSvc.GetUser(ctx, getCustomerReq)
+			if errFunc != nil {
+				err = errFunc
+				return
+			}
+			customer = customerRes.User
+		}(getCustomerReq)
+	}
 
 	// Get creator
 	wg.Add(1)
@@ -786,7 +819,7 @@ func (s *pgService) getOrderDetail(ctx context.Context, order pgModel.Order, isG
 			ParamUserID: (order.ImplementerID).String(),
 		}
 		wg.Add(1)
-		go func(getCustomerReq requestModel.GetUserRequest) {
+		go func(getImplementerReq requestModel.GetUserRequest) {
 			defer wg.Done()
 			implementerRes, errFunc := s.userSvc.GetUser(ctx, getImplementerReq)
 			if errFunc != nil {
@@ -800,13 +833,13 @@ func (s *pgService) getOrderDetail(ctx context.Context, order pgModel.Order, isG
 				Fullname: implementerRes.User.Fullname,
 				Role:     implementerRes.User.Role,
 			}
-		}(getCustomerReq)
+		}(getImplementerReq)
 	}
 
 	// Get product order
 	if isGetProductInfo {
 		wg.Add(1)
-		go func(getCustomerReq requestModel.GetUserRequest) {
+		go func() {
 			defer wg.Done()
 			// implementer := &pgModel.U
 
@@ -830,8 +863,8 @@ func (s *pgService) getOrderDetail(ctx context.Context, order pgModel.Order, isG
 					}
 					product := productRes.Product
 					orderProductInfo = append(orderProductInfo, &responseModel.OrderProductInfo{
-						OrderQuantity: productOrderInfo.OrderQuantity,
-						RealPrice:     productOrderInfo.RealPrice,
+						OrderQuantity:  productOrderInfo.OrderQuantity,
+						OrderRealPrice: productOrderInfo.OrderRealPrice,
 						Product: &pgModel.Product{
 							Model: pgModel.Model{
 								ID: product.ID,
@@ -840,11 +873,12 @@ func (s *pgService) getOrderDetail(ctx context.Context, order pgModel.Order, isG
 							Price:     product.Price,
 							MainPhoto: product.MainPhoto,
 							Quantity:  product.Quantity,
+							Color:     product.Color,
 						},
 					})
 				}(productOrder)
 			}
-		}(getCustomerReq)
+		}()
 	}
 
 	wg.Wait()

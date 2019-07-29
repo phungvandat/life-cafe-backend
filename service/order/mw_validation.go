@@ -67,43 +67,45 @@ func (mw validationMiddleware) CreateOrder(ctx context.Context, req requestModel
 			return nil, errors.InvalidOrderProductQuantityError
 		}
 
-		if productInfo.RealPrice < 0 {
-			return nil, errors.InvalidOrderProductRealPriceError
+		if productInfo.OrderRealPrice < 0 {
+			return nil, errors.InvalidOrderProductOrderRealPriceError
 		}
 	}
 
-	if req.ReceiverPhoneNumber == "" {
-		return nil, errors.ReceiverPhoneNumberIsRequiredError
-	}
-
-	if !regex.IsPhoneNumberValid(req.ReceiverPhoneNumber) {
-		return nil, errors.InvalidReceiverPhoneNumberError
-	}
-
-	if strings.Trim(req.ReceiverAddress, " ") == "" {
-		return nil, errors.ReceiverAddressIsRequiredError
-	}
-
-	if strings.Trim(req.ReceiverFullname, " ") == "" {
-		return nil, errors.ReceiverFullnameIsRequiredError
-	}
-
-	if req.CustomerID != "" {
-		if _, err := pgModel.UUIDFromString(req.CustomerID); err != nil {
-			return nil, errors.InvalidCustomerIDError
+	if req.Type != "import" {
+		if req.ReceiverPhoneNumber == "" {
+			return nil, errors.ReceiverPhoneNumberIsRequiredError
 		}
-	} else {
-		if req.CustomerPhoneNumber == "" {
-			return nil, errors.CustomerPhoneNumberIsReqiredError
+
+		if !regex.IsPhoneNumberValid(req.ReceiverPhoneNumber) {
+			return nil, errors.InvalidReceiverPhoneNumberError
 		}
-		if !regex.IsPhoneNumberValid(req.CustomerPhoneNumber) {
-			return nil, errors.InvalidCustomerPhoneNumberError
+
+		if strings.Trim(req.ReceiverAddress, " ") == "" {
+			return nil, errors.ReceiverAddressIsRequiredError
 		}
-		if strings.Trim(req.CustomerAddress, " ") == "" {
-			return nil, errors.CustomerAddressIsRequiredError
+
+		if strings.Trim(req.ReceiverFullname, " ") == "" {
+			return nil, errors.ReceiverFullnameIsRequiredError
 		}
-		if strings.Trim(req.CustomerFullname, " ") == "" {
-			return nil, errors.CustomerFullnameIsRequiredError
+
+		if req.CustomerID != "" {
+			if _, err := pgModel.UUIDFromString(req.CustomerID); err != nil {
+				return nil, errors.InvalidCustomerIDError
+			}
+		} else {
+			if req.CustomerPhoneNumber == "" {
+				return nil, errors.CustomerPhoneNumberIsReqiredError
+			}
+			if !regex.IsPhoneNumberValid(req.CustomerPhoneNumber) {
+				return nil, errors.InvalidCustomerPhoneNumberError
+			}
+			if strings.Trim(req.CustomerAddress, " ") == "" {
+				return nil, errors.CustomerAddressIsRequiredError
+			}
+			if strings.Trim(req.CustomerFullname, " ") == "" {
+				return nil, errors.CustomerFullnameIsRequiredError
+			}
 		}
 	}
 
@@ -146,8 +148,8 @@ func (mw validationMiddleware) UpdateOrder(ctx context.Context, req requestModel
 				return nil, errors.InvalidOrderProductQuantityError
 			}
 
-			if productInfo.RealPrice < 0 {
-				return nil, errors.InvalidOrderProductRealPriceError
+			if productInfo.OrderRealPrice < 0 {
+				return nil, errors.InvalidOrderProductOrderRealPriceError
 			}
 		}
 	}

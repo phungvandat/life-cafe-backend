@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
@@ -45,7 +46,7 @@ func (mw validationMiddleware) Create(ctx context.Context, req requestModel.Crea
 		return nil, errors.MissingFullnameError
 	}
 
-	if strings.Trim(req.Password, " ") == "" {
+	if (req.Role == "master" || req.Role == "admin") && strings.Trim(req.Password, " ") == "" {
 		return nil, errors.MissingPasswordError
 	}
 
@@ -86,4 +87,15 @@ func (mw validationMiddleware) GetUser(ctx context.Context, req requestModel.Get
 	}
 
 	return mw.Service.GetUser(ctx, req)
+}
+
+func (mw validationMiddleware) GetUsers(ctx context.Context, req requestModel.GetUsersRequest) (*responseModel.GetUsersResponse, error) {
+	if _, err := strconv.ParseInt(req.Skip, 10, 32); req.Skip != "" && err != nil {
+		return nil, errors.InvalidSkipError
+	}
+
+	if _, err := strconv.ParseInt(req.Limit, 10, 32); req.Limit != "" && err != nil {
+		return nil, errors.InvalidLimitError
+	}
+	return mw.Service.GetUsers(ctx, req)
 }
