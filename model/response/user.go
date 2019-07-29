@@ -24,4 +24,5 @@ type GetUserResponse struct {
 // GetUsersResponse struct
 type GetUsersResponse struct {
 	Users []*pgModel.User `json:"users"`
+	Total int             `json:"total,omitempty"`
 }

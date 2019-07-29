@@ -30,4 +30,5 @@ type GetUsersRequest struct {
 	AlwaysPhone string `json:"alwaysPhone,omitempty"`
 	Skip        string `json:"skip,omitempty"`
 	Limit       string `json:"limit,omitempty"`
+	Role        string `json:"role,omitempty"`
 }

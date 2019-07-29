@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"sync"
 
 	"github.com/jinzhu/gorm"
 	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
@@ -193,15 +194,49 @@ func (s *pgService) GetUsers(ctx context.Context, req requestModel.GetUsersReque
 		}
 	}
 
-	users := []*pgModel.User{}
+	if req.Role != "" {
+		query := "role = '" + req.Role + "'"
+		if stringQuery == "" {
+			stringQuery += query
+		} else {
+			stringQuery += " AND " + query
+		}
+	}
 
-	err := s.db.Limit(limit).Offset(skip).Where(stringQuery).Table("users").Scan(&users).Error
+	users := []*pgModel.User{}
+	var total int
+	var err error
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		errFunc := s.db.Limit(limit).Offset(skip).
+			Where(stringQuery).Table("users").
+			Scan(&users).Order("created_at desc").Error
+		if errFunc != nil {
+			err = errFunc
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		errFunc := s.db.Where(stringQuery).Table("users").Count(&total).Error
+		if errFunc != nil {
+			err = errFunc
+		}
+	}()
+	wg.Wait()
 
 	if err != nil {
 		return res, err
 	}
 
 	res.Users = users
+	res.Total = total
 
 	return res, nil
 }

@@ -97,5 +97,9 @@ func (mw validationMiddleware) GetUsers(ctx context.Context, req requestModel.Ge
 	if _, err := strconv.ParseInt(req.Limit, 10, 32); req.Limit != "" && err != nil {
 		return nil, errors.InvalidLimitError
 	}
+
+	if _, check := constants.UserRole[req.Role]; req.Role != "" && !check {
+		return nil, errors.InvalidRoleError
+	}
 	return mw.Service.GetUsers(ctx, req)
 }

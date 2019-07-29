@@ -33,6 +33,7 @@ func GetUsersRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req.Fullname = r.URL.Query().Get("fullname")
 	req.PhoneNumber = r.URL.Query().Get("phoneNumber")
 	req.AlwaysPhone = r.URL.Query().Get("alwaysPhone")
+	req.Role = r.URL.Query().Get("role")
 
 	return req, nil
 }
