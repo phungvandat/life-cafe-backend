@@ -16,4 +16,5 @@ type Service interface {
 	CreateMaster(context.Context) error
 	GetUser(context.Context, requestModel.GetUserRequest) (*responseModel.GetUserResponse, error)
 	GetUsers(context.Context, requestModel.GetUsersRequest) (*responseModel.GetUsersResponse, error)
+	UpdateUser(context.Context, requestModel.UpdateUserRequest) (*responseModel.UpdateUserResponse, error)
 }

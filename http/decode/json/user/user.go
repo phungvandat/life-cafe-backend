@@ -45,3 +45,16 @@ func GetUserRequest(_ context.Context, r *http.Request) (interface{}, error) {
 
 	return req, nil
 }
+
+// UpdateUserRequest func
+func UpdateUserRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req requestModel.UpdateUserRequest
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return nil, err
+	}
+	req.ParamUserID = chi.URLParam(r, "userID")
+
+	return req, nil
+}

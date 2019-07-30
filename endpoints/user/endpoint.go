@@ -10,4 +10,5 @@ type UserEndpoint struct {
 	UserLogin  endpoint.Endpoint
 	GetUsers   endpoint.Endpoint
 	GetUser    endpoint.Endpoint
+	UpdateUser endpoint.Endpoint
 }

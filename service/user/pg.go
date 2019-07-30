@@ -9,6 +9,7 @@ import (
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
 	"github.com/phungvandat/life-cafe-backend/util/config"
+	"github.com/phungvandat/life-cafe-backend/util/constants"
 	"github.com/phungvandat/life-cafe-backend/util/contextkey"
 	errors "github.com/phungvandat/life-cafe-backend/util/error"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
@@ -238,5 +239,63 @@ func (s *pgService) GetUsers(ctx context.Context, req requestModel.GetUsersReque
 	res.Users = users
 	res.Total = total
 
+	return res, nil
+}
+
+func (s *pgService) UpdateUser(ctx context.Context, req requestModel.UpdateUserRequest) (*responseModel.UpdateUserResponse, error) {
+	tx := s.db.Begin()
+	transactionID := (pgModel.NewUUID()).String()
+	s.spRollback.NewTransaction(transactionID, tx)
+
+	res := &responseModel.UpdateUserResponse{
+		TransactionID: &transactionID,
+	}
+
+	ctxUserID, checkUserID := ctx.Value(contextkey.UserIDContextKey).(string)
+	ctxRole, checkUserRole := ctx.Value(contextkey.UserRoleContextKey).(string)
+
+	if !checkUserID || !checkUserRole {
+		return res, errors.NotLoggedInError
+	}
+
+	if ctxRole != constants.UserRole["master"] && ctxRole != constants.UserRole["admin"] && ctxUserID != req.ParamUserID {
+		return res, errors.AccessDeniedError
+	}
+
+	userIDUUID, _ := pgModel.UUIDFromString(req.ParamUserID)
+
+	user := &pgModel.User{
+		Model: pgModel.Model{
+			ID: userIDUUID,
+		},
+	}
+
+	err := s.db.Find(user, user).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.UserNotFoundError
+		}
+		return res, err
+	}
+
+	if req.PhoneNumber != "" && req.PhoneNumber != user.PhoneNumber {
+		user.PhoneNumber = req.PhoneNumber
+	}
+
+	if req.Address != "" && req.Address != user.Address {
+		user.Address = req.Address
+	}
+
+	if req.Fullname != "" && req.Fullname != user.Fullname {
+		user.Fullname = req.Fullname
+	}
+
+	err = tx.Save(user).Error
+	if err != nil {
+		return res, err
+	}
+
+	res.User = user
 	return res, nil
 }

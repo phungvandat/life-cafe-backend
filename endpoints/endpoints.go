@@ -30,6 +30,7 @@ func MakeServerEndpoints(s service.Service) Endpoints {
 			UserLogin:  user.MakeLogInEndpoint(s),
 			GetUsers:   user.MakeGetUsersEndpoint(s),
 			GetUser:    user.MakeGetUserEndpoint(s),
+			UpdateUser: user.MakeUpdateUserEndpoint(s),
 		},
 		UploadEndpoint: upload.UploadEndpoint{
 			UploadImages: upload.MakeUploadImages(s),
