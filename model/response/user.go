@@ -26,3 +26,9 @@ type GetUsersResponse struct {
 	Users []*pgModel.User `json:"users"`
 	Total int             `json:"total,omitempty"`
 }
+
+// UpdateUserResponse struct
+type UpdateUserResponse struct {
+	User          *pgModel.User `json:"user,omitempty"`
+	TransactionID *string       `json:"transactionID,omitempty"`
+}

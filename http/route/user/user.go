@@ -43,5 +43,14 @@ func UserRoute(endpoints endpoints.Endpoints,
 			encode.EncodeResponse,
 			options...,
 		).ServeHTTP)
+		// Update user
+		r.Put("/{userID}", httptransport.NewServer(
+			middlewares.AuthMiddleware.AuthUser(
+				endpoints.UserEndpoint.UpdateUser,
+			),
+			userDecode.UpdateUserRequest,
+			encode.EncodeResponse,
+			options...,
+		).ServeHTTP)
 	}
 }

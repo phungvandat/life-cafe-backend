@@ -103,3 +103,11 @@ func (mw validationMiddleware) GetUsers(ctx context.Context, req requestModel.Ge
 	}
 	return mw.Service.GetUsers(ctx, req)
 }
+
+func (mw validationMiddleware) UpdateUser(ctx context.Context, req requestModel.UpdateUserRequest) (*responseModel.UpdateUserResponse, error) {
+	if req.PhoneNumber != "" && !regex.IsPhoneNumberValid(req.PhoneNumber) {
+		return nil, errors.InvalidUserPhoneNumberError
+	}
+
+	return mw.Service.UpdateUser(ctx, req)
+}

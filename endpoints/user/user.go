@@ -77,3 +77,35 @@ func MakeGetUserEndpoint(s service.Service) endpoint.Endpoint {
 		return res, nil
 	}
 }
+
+// MakeUpdateUserEndpoint func
+func MakeUpdateUserEndpoint(s service.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(requesetModel.UpdateUserRequest)
+
+		res, err := s.UserService.UpdateUser(ctx, req)
+
+		var errTransaction error
+		var transactionID *string
+
+		if res != nil && res.TransactionID != nil {
+			transactionID = res.TransactionID
+		}
+		if err != nil {
+			if transactionID != nil {
+				errTransaction = s.UserService.RollbackTransaction(ctx, *transactionID)
+			}
+			return nil, err
+		}
+		if transactionID != nil {
+			errTransaction = s.UserService.CommitTransaction(ctx, *transactionID)
+			res.TransactionID = nil
+		}
+		if errTransaction != nil {
+			var log log.Logger
+			log.Log("Transaction update user failure by error ", errTransaction)
+		}
+
+		return res, nil
+	}
+}

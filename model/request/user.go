@@ -32,3 +32,11 @@ type GetUsersRequest struct {
 	Limit       string `json:"limit,omitempty"`
 	Role        string `json:"role,omitempty"`
 }
+
+// UpdateUserRequest struct
+type UpdateUserRequest struct {
+	ParamUserID string `json:"userID,omitempty"`
+	PhoneNumber string `json:"phoneNumber,omitempty"`
+	Address     string `json:"address,omitempty"`
+	Fullname    string `json:"fullname,omitempty"`
+}
