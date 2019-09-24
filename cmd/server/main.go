@@ -25,7 +25,7 @@ import (
 	userSvc "github.com/phungvandat/life-cafe-backend/service/user"
 	"github.com/phungvandat/life-cafe-backend/util/config"
 	"github.com/phungvandat/life-cafe-backend/util/config/db/pg"
-	"github.com/phungvandat/life-cafe-backend/util/helper"
+	"github.com/phungvandat/life-cafe-backend/util/externals/sagas"
 )
 
 func main() {
@@ -65,7 +65,7 @@ func main() {
 	// Setup service
 	var (
 		pgDB, closeDB = pg.New(config.GetPGDataSourceEnv())
-		spRollback    = helper.NewSagasService()
+		spRollback    = sagas.NewSagasService()
 
 		photoService = service.Compose(
 			photoSvc.NewPGService(pgDB, spRollback),

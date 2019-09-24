@@ -12,17 +12,18 @@ import (
 	"github.com/phungvandat/life-cafe-backend/util/constants"
 	"github.com/phungvandat/life-cafe-backend/util/contextkey"
 	errors "github.com/phungvandat/life-cafe-backend/util/error"
+	"github.com/phungvandat/life-cafe-backend/util/externals/sagas"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
 
 // pgService implmenter for User serivce in postgres
 type pgService struct {
 	db         *gorm.DB
-	spRollback helper.SagasService
+	spRollback sagas.SagasService
 }
 
 // NewPGService new pg service
-func NewPGService(db *gorm.DB, spRollback helper.SagasService) Service {
+func NewPGService(db *gorm.DB, spRollback sagas.SagasService) Service {
 	return &pgService{
 		db:         db,
 		spRollback: spRollback,
@@ -66,7 +67,6 @@ func (s *pgService) Create(ctx context.Context, req requestModel.CreateUserReque
 		return res, err
 	}
 	res.User = user
-
 	return res, nil
 }
 

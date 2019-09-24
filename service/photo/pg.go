@@ -7,17 +7,17 @@ import (
 	pgModel "github.com/phungvandat/life-cafe-backend/model/pg"
 	requestModel "github.com/phungvandat/life-cafe-backend/model/request"
 	responseModel "github.com/phungvandat/life-cafe-backend/model/response"
-	"github.com/phungvandat/life-cafe-backend/util/helper"
+	"github.com/phungvandat/life-cafe-backend/util/externals/sagas"
 )
 
 // pgService implmenter for photo serivce in postgres
 type pgService struct {
 	db         *gorm.DB
-	spRollback helper.SagasService
+	spRollback sagas.SagasService
 }
 
 // NewPGService new pg service
-func NewPGService(db *gorm.DB, spRollback helper.SagasService) Service {
+func NewPGService(db *gorm.DB, spRollback sagas.SagasService) Service {
 	return &pgService{
 		db:         db,
 		spRollback: spRollback,

@@ -19,3 +19,7 @@ Follow command
 Follow command
 - ```make dev```
 
+### Run test
+Flolow command
+-```make test```
+
