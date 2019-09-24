@@ -13,6 +13,7 @@ import (
 	userSvc "github.com/phungvandat/life-cafe-backend/service/user"
 	"github.com/phungvandat/life-cafe-backend/util/contextkey"
 	errors "github.com/phungvandat/life-cafe-backend/util/error"
+	"github.com/phungvandat/life-cafe-backend/util/externals/sagas"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
 
@@ -21,11 +22,11 @@ type pgService struct {
 	db         *gorm.DB
 	userSvc    userSvc.Service
 	productSvc productSvc.Service
-	spRollback helper.SagasService
+	spRollback sagas.SagasService
 }
 
 // NewPGService new pg service
-func NewPGService(db *gorm.DB, userSvc userSvc.Service, productSvc productSvc.Service, spRollback helper.SagasService) Service {
+func NewPGService(db *gorm.DB, userSvc userSvc.Service, productSvc productSvc.Service, spRollback sagas.SagasService) Service {
 	return &pgService{
 		db:         db,
 		spRollback: spRollback,

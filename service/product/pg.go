@@ -13,6 +13,7 @@ import (
 	categorySvc "github.com/phungvandat/life-cafe-backend/service/category"
 	photoSvc "github.com/phungvandat/life-cafe-backend/service/photo"
 	errors "github.com/phungvandat/life-cafe-backend/util/error"
+	"github.com/phungvandat/life-cafe-backend/util/externals/sagas"
 	"github.com/phungvandat/life-cafe-backend/util/helper"
 )
 
@@ -20,12 +21,12 @@ import (
 type pgService struct {
 	db          *gorm.DB
 	categorySvc categorySvc.Service
-	spRollback  helper.SagasService
+	spRollback  sagas.SagasService
 	photoSvc    photoSvc.Service
 }
 
 // NewPGService new pg service
-func NewPGService(db *gorm.DB, categorySvc categorySvc.Service, photoSvc photoSvc.Service, spRollback helper.SagasService) Service {
+func NewPGService(db *gorm.DB, categorySvc categorySvc.Service, photoSvc photoSvc.Service, spRollback sagas.SagasService) Service {
 	return &pgService{
 		db:          db,
 		categorySvc: categorySvc,

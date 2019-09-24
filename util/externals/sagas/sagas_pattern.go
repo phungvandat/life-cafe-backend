@@ -1,4 +1,4 @@
-package helper
+package sagas
 
 import (
 	"github.com/jinzhu/gorm"
@@ -9,6 +9,8 @@ type SagasService interface {
 	NewTransaction(string, *gorm.DB)
 	CommitTransaction(string) error
 	RollbackTransaction(string) error
+	CommitAllTransaction() error
+	RollbackAllTransaction() error
 }
 
 // TransactionRollback struct
@@ -47,4 +49,28 @@ func (tr *TransactionRollback) RollbackTransaction(transactionID string) error {
 	}
 	delete(tr.transaction, transactionID)
 	return tx.Rollback().Error
+}
+
+// CommitAllTransaction func
+func (tr *TransactionRollback) CommitAllTransaction() error {
+	for key, tx := range tr.transaction {
+		delete(tr.transaction, key)
+		err := tx.Commit().Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// RollbackAllTransaction func
+func (tr *TransactionRollback) RollbackAllTransaction() error {
+	for key, tx := range tr.transaction {
+		delete(tr.transaction, key)
+		err := tx.Rollback().Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

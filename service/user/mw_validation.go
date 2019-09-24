@@ -46,16 +46,16 @@ func (mw validationMiddleware) Create(ctx context.Context, req requestModel.Crea
 		return nil, errors.MissingFullnameError
 	}
 
-	if (req.Role == "master" || req.Role == "admin") && strings.Trim(req.Password, " ") == "" {
-		return nil, errors.MissingPasswordError
-	}
-
 	if strings.Trim(req.Role, " ") == "" {
 		return nil, errors.MissingRoleError
 	}
 
 	if _, check := constants.UserRole[req.Role]; !check {
 		return nil, errors.InvalidRoleError
+	}
+
+	if (req.Role == "master" || req.Role == "admin") && strings.Trim(req.Password, " ") == "" {
+		return nil, errors.MissingPasswordError
 	}
 
 	if req.PhoneNumber == "" {

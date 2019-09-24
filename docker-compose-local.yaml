@@ -9,13 +9,21 @@ services:
             POSTGRES_PASSWORD: lifecafe
             POSTGRES_DB: life-cafe
         container_name: datpv-postgres
-    
+
     adminer:
         image: adminer
         ports:
             - 8080:8080
         container_name: datpv-adminer
-    
+
+    db-test:
+        image: postgres
+        environment:
+          POSTGRES_PASSWORD: lifecafetest
+          POSTGRES_DB: life-cafe-test
+        ports:
+          - 5439:5432
+
     #     pgAdmin:
     #     image: dpage/pgadmin4
     #     ports:
